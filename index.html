@@ -1,0 +1,2183 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fisher-Claw AI: 스마트 피지컬 수산 오락기</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=DungGeunMo&family=Orbitron:wght@400;700;900&family=Noto+Sans+KR:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #0b0d12;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+        .retro-font {
+            font-family: 'DungGeunMo', monospace;
+        }
+        .digital-font {
+            font-family: 'Orbitron', sans-serif;
+        }
+        .neon-border {
+            box-shadow: 0 0 12px #10b981, inset 0 0 6px #10b981;
+            border: 2px solid #10b981;
+        }
+        .neon-text-emerald {
+            text-shadow: 0 0 5px #10b981, 0 0 10px #10b981;
+        }
+        .neon-text-violet {
+            text-shadow: 0 0 5px #8b5cf6, 0 0 10px #8b5cf6;
+        }
+        .neon-border-violet {
+            box-shadow: 0 0 12px #8b5cf6, inset 0 0 6px #8b5cf6;
+            border: 2px solid #8b5cf6;
+        }
+        @keyframes bubbleUp {
+            0% { transform: translateY(10px) scale(0.8); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translateY(-25px) scale(1.2); opacity: 0; }
+        }
+        .steam-bubble {
+            animation: bubbleUp 1.2s infinite ease-in-out;
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #10b981;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen items-center justify-start p-2 sm:p-6">
+
+    <!-- 스마트 오락기 메인 컨테이너 -->
+    <div class="w-full max-w-7xl bg-gray-900 border-4 border-gray-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col lg:flex-row">
+        
+        <!-- 왼쪽: 게임기 캐비닛 (캔버스 화면 영역) -->
+        <div class="w-full lg:w-3/5 p-4 bg-black flex flex-col items-center border-b-4 lg:border-b-0 lg:border-r-4 border-gray-800">
+            <!-- 게임기 상단 네온 타이틀 바 -->
+            <div class="w-full flex justify-between items-center bg-gray-950 px-4 py-2 rounded-xl mb-3 neon-border border-emerald-500">
+                <span class="retro-font text-emerald-400 text-lg sm:text-2xl neon-text-emerald animate-pulse">🕹️ FISHER-CLAW AI PRO</span>
+                <div class="flex items-center space-x-2">
+                    <span class="w-3 h-3 bg-red-500 rounded-full animate-ping"></span>
+                    <span class="digital-font text-xs text-gray-400">SMART NON-LINEAR AUTO SEEK ACTIVE</span>
+                </div>
+            </div>
+
+            <!-- 시뮬레이터 캔버스 컨테이너 (종횡비 4:3 유지용) -->
+            <div class="relative w-full aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden border-2 border-gray-800">
+                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
+                <!-- 캔버스 위에 뜨는 가이드 텍스트 -->
+                <div id="overlayText" class="absolute top-4 left-4 pointer-events-none bg-black/60 px-3 py-1.5 rounded-lg text-xs text-gray-200 retro-font border border-gray-800">
+                    <i class="fa-solid fa-circle-info text-emerald-400 mr-1 animate-bounce"></i> 타겟 어종을 지정한 뒤 아래 HARVEST 버튼을 클릭하면 AI 손이 비선형 곡선 궤도로 자동 인터셉트합니다!
+                </div>
+                <!-- 잉크 폭탄 먹물 효과 오버레이 -->
+                <div id="inkOverlay" class="absolute inset-0 bg-black/90 pointer-events-none transition-opacity duration-500 opacity-0 flex items-center justify-center">
+                    <div class="text-center">
+                        <span class="retro-font text-purple-500 text-3xl font-bold animate-bounce">⚠️ 오징어 먹물 공격!!</span>
+                        <p class="text-xs text-gray-400 mt-2">화면이 서서히 정화되고 있습니다...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 오락기 물리 조작 판넬 -->
+            <div class="w-full mt-4 bg-gray-950 p-4 rounded-2xl border border-gray-800 flex flex-col space-y-4">
+                
+                <!-- 14대 어종별 타겟 락온 버튼 매트릭스 -->
+                <div>
+                    <span class="text-[10px] text-gray-400 retro-font mb-1.5 block">🎯 AI TARGET SELECT MATRIX (추적 및 포획할 수산물을 선택하세요)</span>
+                    <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5" id="targetSpeciesMatrix">
+                        <!-- JS에서 동적으로 14종 버튼 생성 -->
+                    </div>
+                </div>
+
+                <!-- 조준대기 표시창을 제거하고, 획기적으로 공간을 정렬한 하단 조작 바 -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-gray-900 pt-3">
+                    
+                    <!-- 대형 HARVEST 버튼 (클릭 시 자동 곡선 비행 개시) -->
+                    <div class="flex-1 w-full flex justify-center">
+                        <button id="btnGrab" class="w-full h-16 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 active:from-red-700 active:to-orange-700 active:translate-y-1 text-white font-extrabold text-lg rounded-2xl border-b-8 border-red-950 flex flex-col items-center justify-center shadow-lg transition-all shadow-red-600/20 active:border-b-2 select-none touch-none">
+                            <span class="retro-font text-sm leading-none">🚀 Launch AI Auto-Harvest!</span>
+                            <span class="text-[10px] text-red-200 mt-1 font-normal">비선형 자율 추적 곡선 비행 개시</span>
+                        </button>
+                    </div>
+
+                    <!-- 사운드 토글 & 코인 점수판 (충분한 공간을 가질 수 있도록 레이아웃 분할) -->
+                    <div class="flex items-center space-x-3 bg-gray-900 p-3 rounded-xl border border-gray-800 w-full sm:w-auto justify-end shrink-0">
+                        <button id="btnMute" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-red-400" title="효과음">
+                            <i id="muteIcon" class="fa-solid fa-volume-high"></i>
+                        </button>
+                        <button id="btnBgmToggle" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-emerald-400" title="배경음악">
+                            <i id="bgmIcon" class="fa-solid fa-music"></i>
+                        </button>
+                        <div class="text-right min-w-[75px] pl-2 border-l border-gray-850">
+                            <div class="text-[9px] text-gray-500 retro-font">SCORE</div>
+                            <div id="scoreVal" class="digital-font text-xl text-emerald-400 font-bold">0000</div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 오른쪽: 공정 제어반 및 인벤토리 & AI 미식 요리 연구소 -->
+        <div class="w-full lg:w-2/5 p-4 bg-gray-950 flex flex-col justify-between space-y-4">
+            <div>
+                <!-- 상단 헤더 -->
+                <div class="border-b border-gray-800 pb-2 flex justify-between items-center">
+                    <div>
+                        <h2 class="retro-font text-violet-400 text-md neon-text-violet"><i class="fa-solid fa-gears mr-1"></i> 피지컬 AI 공정 제어반</h2>
+                        <p class="text-[10px] text-gray-400">수확한 수산물을 조리 가공하세요!</p>
+                    </div>
+                    <span id="targetSpeciesBadge" class="text-[10px] bg-slate-800 text-emerald-400 px-2 py-1 rounded-md font-bold retro-font">대기 중</span>
+                </div>
+
+                <!-- 수산 가공 패널 -->
+                <div class="bg-gray-900 p-2 rounded-xl border border-gray-800 mt-2">
+                    <div class="grid grid-cols-5 gap-1.5" id="processGrid">
+                        <button onclick="triggerProcess('filet')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="filet" disabled>
+                            <i class="fa-solid fa-knife text-red-400 text-sm"></i>
+                            <span>순살필렛</span>
+                        </button>
+                        <button onclick="triggerProcess('round')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="round" disabled>
+                            <i class="fa-solid fa-fish text-blue-400 text-sm"></i>
+                            <span>라운드</span>
+                        </button>
+                        <button onclick="triggerProcess('salt')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="salt" disabled>
+                            <i class="fa-solid fa-cubes-salt text-yellow-500 text-sm"></i>
+                            <span>자반염장</span>
+                        </button>
+                        <button onclick="triggerProcess('boiled')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="boiled" disabled>
+                            <i class="fa-solid fa-fire-burner text-amber-500 text-sm"></i>
+                            <span>자숙해감</span>
+                        </button>
+                        <button onclick="triggerProcess('can')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="can" disabled>
+                            <i class="fa-solid fa-prescription-bottle text-emerald-400 text-sm"></i>
+                            <span>통조림</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 실시간 AI 수산물 납품 계약서 의뢰판 -->
+                <div class="mt-3 bg-slate-900 border border-violet-800/60 p-3 rounded-xl">
+                    <div class="flex justify-between items-center border-b border-violet-800/40 pb-1.5 mb-2">
+                        <span class="text-xs retro-font text-violet-300 flex items-center gap-1">
+                            <i class="fa-solid fa-file-signature text-violet-400 animate-pulse"></i> 
+                            AI 수산 실시간 납품 의뢰판
+                        </span>
+                        <button onclick="generateNewAiContract()" class="text-[9px] bg-violet-950 hover:bg-violet-900 border border-violet-700 text-violet-300 px-2 py-0.5 rounded transition-colors">
+                            <i class="fa-solid fa-rotate mr-1"></i>새 의뢰 갱신
+                        </button>
+                    </div>
+                    <div id="contractDisplay" class="text-[11px] text-gray-300 min-h-[50px] flex flex-col justify-between">
+                        <p class="text-gray-500 text-center py-2">AI가 신규 글로벌 계약을 분석 중입니다...</p>
+                    </div>
+                </div>
+
+                <!-- 생산물 인벤토리 (보관고) -->
+                <div class="mt-3">
+                    <div class="flex justify-between items-center mb-1.5">
+                        <span class="text-xs text-gray-400 retro-font"><i class="fa-solid fa-boxes-stacked mr-1"></i> 수확 보관함 <span class="text-[10px] text-violet-400">(요리할 품목 선택, 최대 2개)</span></span>
+                        <span id="invCount" class="text-[10px] text-gray-500 font-bold">0 / 60</span>
+                    </div>
+                    <!-- 격자형 아이템 슬롯들 -->
+                    <div id="inventorySlots" class="grid grid-cols-4 gap-1.5 bg-slate-900/60 p-2.5 rounded-xl border border-gray-800 h-[105px] overflow-y-auto">
+                        <div class="col-span-4 flex items-center justify-center h-full text-gray-600 text-[11px] retro-font">
+                            보관된 가공품이 없습니다.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 하단: AI 미식 요리 연구소 -->
+            <div class="bg-gradient-to-b from-gray-900 to-slate-950 p-3.5 rounded-xl border border-violet-900 flex flex-col justify-between space-y-2.5">
+                <div class="flex items-center justify-between border-b border-violet-900/40 pb-1.5">
+                    <span class="text-xs retro-font text-violet-400 font-bold"><i class="fa-solid fa-kitchen-set mr-1 text-violet-500"></i> 🍳 AI 미식 요리 연구소</span>
+                    <div class="flex items-center gap-1.5">
+                        <span class="text-[8px] bg-violet-900/50 text-violet-300 px-1.5 py-0.5 rounded border border-violet-700">GEMINI 3.1 GOURMET</span>
+                    </div>
+                </div>
+                
+                <!-- 요리 냄비 -->
+                <div class="flex justify-around items-center bg-slate-900/80 p-2 rounded-xl border border-gray-800">
+                    <div class="flex flex-col items-center">
+                        <span class="text-[9px] text-gray-500 retro-font mb-1">식재료 1</span>
+                        <div id="potSlot1" onclick="unloadIngredient(0)" class="w-14 h-14 rounded-xl border-2 border-dashed border-gray-700 bg-slate-950 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors">
+                            <span class="text-gray-600 text-[10px] retro-font">비었음</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col items-center justify-center">
+                        <i class="fa-solid fa-plus text-gray-600 animate-pulse"></i>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-[9px] text-gray-500 retro-font mb-1">식재료 2</span>
+                        <div id="potSlot2" onclick="unloadIngredient(1)" class="w-14 h-14 rounded-xl border-2 border-dashed border-gray-700 bg-slate-950 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors">
+                            <span class="text-gray-600 text-[10px] retro-font">비었음</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col justify-center items-stretch space-y-1">
+                        <button id="btnDevelopRecipes" onclick="developRecipes()" class="bg-violet-800 hover:bg-violet-700 text-white text-[10px] font-bold py-2 px-3 rounded-lg transition-colors select-none opacity-50 cursor-not-allowed" disabled>
+                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>레시피 개발
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 조리 시뮬레이션 및 요리 완성 피드백 구역 -->
+                <div id="kitchenDisplayPanel" class="text-[11px] text-gray-300 leading-relaxed min-h-[140px] max-h-[160px] overflow-y-auto pr-1">
+                    <p class="text-gray-500 italic text-center pt-8">수확 보관함에서 가공품을 클릭해 요리 냄비에 담아주세요.<br>선택한 수산물로 만들 수 있는 미식 레시피가 생성됩니다.</p>
+                </div>
+
+                <!-- 부재료 냉장고 파먹기 레시피 융합 인풋 (선택 사항) -->
+                <div id="fusionContainer" class="hidden bg-slate-900 p-2 rounded-lg border border-violet-900/40">
+                    <p class="text-[9px] text-violet-300 font-bold mb-1"><i class="fa-solid fa-mortar-pestle mr-1"></i> 냉장고 속 부재료 추가 (선택 입력)</p>
+                    <div class="flex gap-1.5">
+                        <input type="text" id="extraIngredients" placeholder="예: 고추장, 치즈, 양파, 라면사리" class="flex-1 bg-slate-950 text-[10px] text-gray-200 px-2 py-1 rounded border border-gray-800 focus:outline-none focus:border-violet-500">
+                    </div>
+                </div>
+
+                <!-- API Key 입력 영역 -->
+                <div class="pt-2 border-t border-gray-800 flex items-center justify-between gap-1.5">
+                    <div class="relative flex-1">
+                        <input type="password" id="apiKeyInput" placeholder="Gemini API Key (비우면 시뮬레이터 자체 제공 키 사용)" class="w-full text-[9px] bg-slate-900 text-gray-300 px-2 py-1.5 rounded-lg border border-gray-850 focus:outline-none focus:border-violet-500 placeholder-gray-600">
+                    </div>
+                    <button onclick="saveApiKey()" class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg shrink-0 transition-colors">적용</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- 푸터 -->
+    <div class="w-full max-w-7xl mt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 px-4 gap-2">
+        <span>© 2026 Fisher-Claw AI Inc. All rights reserved.</span>
+        <span class="retro-font text-emerald-500"><i class="fa-solid fa-gavel mr-1"></i> 해양수산법령 분석 엔진(FisherLaw) 및 Gemini LLM 연계 기술 데모</span>
+    </div>
+
+    <script>
+        let audioCtx = null;
+        let isMuted = false;
+        let isBgmOn = false; 
+        let bgmInterval = null;
+        let bgmStep = 0;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function playSound(type) {
+            if (isMuted) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+            osc.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'coin') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(587.33, now); // D5
+                osc.frequency.setValueAtTime(880, now + 0.1); // A5
+                gainNode.gain.setValueAtTime(0.08, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+                osc.start(now);
+                osc.stop(now + 0.35);
+            } else if (type === 'drop') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(350, now);
+                osc.frequency.exponentialRampToValueAtTime(120, now + 0.6);
+                gainNode.gain.setValueAtTime(0.1, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            } else if (type === 'catch') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(440, now);
+                osc.frequency.setValueAtTime(554.37, now + 0.08);
+                osc.frequency.setValueAtTime(659.25, now + 0.16);
+                osc.frequency.setValueAtTime(880, now + 0.24);
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'process') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.linearRampToValueAtTime(350, now + 0.5);
+                gainNode.gain.setValueAtTime(0.2, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+                osc.start(now);
+                osc.stop(now + 0.6);
+            } else if (type === 'squid') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(90, now);
+                osc.frequency.linearRampToValueAtTime(30, now + 1.2);
+                gainNode.gain.setValueAtTime(0.15, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+                osc.start(now);
+                osc.stop(now + 1.2);
+            } else if (type === 'sizzle') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.linearRampToValueAtTime(1500, now + 1.5);
+                gainNode.gain.setValueAtTime(0.12, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+                osc.start(now);
+                osc.stop(now + 1.5);
+            }
+        }
+
+        function startBgmEngine() {
+            if (bgmInterval) return;
+            initAudio();
+            if (!audioCtx) return;
+
+            const chords = [
+                [220.00, 261.63, 329.63, 392.00], // Am9
+                [174.61, 261.63, 349.23, 440.00], // Fmaj7
+                [261.63, 329.63, 392.00, 493.88], // Cmaj7
+                [196.00, 246.94, 293.66, 392.00]  // G6
+            ];
+
+            const sparkleMelody = [
+                523.25, 587.33, 659.25, 783.99, 880.00, 987.77, 1046.50, 0
+            ];
+
+            bgmInterval = setInterval(() => {
+                if (!isBgmOn || isMuted) return;
+                
+                const now = audioCtx.currentTime;
+                const chordIdx = Math.floor(bgmStep / 4) % chords.length;
+                const noteFrequency = chords[chordIdx][bgmStep % 4];
+
+                const padOsc = audioCtx.createOscillator();
+                const padGain = audioCtx.createGain();
+                padOsc.type = 'sine';
+                padOsc.frequency.setValueAtTime(noteFrequency / 2, now);
+                padOsc.connect(padGain);
+                padGain.connect(audioCtx.destination);
+                
+                padGain.gain.setValueAtTime(0.03, now);
+                padGain.gain.exponentialRampToValueAtTime(0.001, now + 1.5);
+                
+                padOsc.start(now);
+                padOsc.stop(now + 1.5);
+
+                if (Math.random() > 0.45) {
+                    const bubbleOsc = audioCtx.createOscillator();
+                    const bubbleGain = audioCtx.createGain();
+                    const randomNote = sparkleMelody[Math.floor(Math.random() * sparkleMelody.length)];
+                    
+                    if (randomNote > 0) {
+                        bubbleOsc.type = 'sine';
+                        bubbleOsc.frequency.setValueAtTime(randomNote, now);
+                        bubbleOsc.connect(bubbleGain);
+                        bubbleGain.connect(audioCtx.destination);
+
+                        bubbleGain.gain.setValueAtTime(0.015, now);
+                        bubbleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+
+                        bubbleOsc.start(now);
+                        bubbleOsc.stop(now + 0.8);
+                    }
+                }
+
+                bgmStep++;
+            }, 550);
+        }
+
+        function stopBgmEngine() {
+            if (bgmInterval) {
+                clearInterval(bgmInterval);
+                bgmInterval = null;
+            }
+        }
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const conveyor = {
+            x: 0,
+            y: 0,
+            width: 0,
+            height: 25,
+            direction: 1
+        };
+
+        function initConveyor() {
+            conveyor.x = canvas.width * 0.55;
+            conveyor.y = canvas.height * 0.32;
+            conveyor.width = canvas.width * 0.45;
+        }
+
+        function resizeCanvas() {
+            const parent = canvas.parentElement;
+            const containerWidth = (parent ? parent.clientWidth : 0) || 800; 
+            canvas.width = containerWidth;
+            canvas.height = containerWidth * 0.75; // 4:3 ratio
+            initConveyor();
+        }
+
+        const speciesData = {
+            '고등어': { type: 'fish', color: '#1d4ed8', stripeColor: '#0f172a', size: 28, speed: 2.2, weight: 1.5, possible: ['filet', 'salt', 'can'], reward: 100 },
+            '연어': { type: 'fish', color: '#f97316', stripeColor: '#fecdd3', size: 38, speed: 1.6, weight: 3.5, possible: ['filet', 'round', 'can'], reward: 250 },
+            '대구': { type: 'fish', color: '#78716c', stripeColor: '#44403c', size: 45, speed: 1.2, weight: 4.5, possible: ['filet', 'round', 'can'], reward: 300 },
+            '명태': { type: 'fish', color: '#d97706', stripeColor: '#78350f', size: 36, speed: 1.8, weight: 2.0, possible: ['filet', 'salt', 'can'], reward: 160 },
+            '광어': { type: 'fish', color: '#854d0e', stripeColor: '#a16207', size: 35, speed: 0.8, weight: 2.8, possible: ['filet', 'can'], reward: 200 },
+            '상어': { type: 'shark', color: '#475569', stripeColor: '#1e293b', size: 60, speed: 3.2, weight: 9.0, possible: ['filet', 'round'], reward: 600 },
+            '고래': { type: 'whale', color: '#0284c7', stripeColor: '#bae6fd', size: 85, speed: 0.7, weight: 15.0, possible: ['round', 'filet'], reward: 1000 },
+            '오징어': { type: 'squid', color: '#ff5c5c', stripeColor: '#ffffff', size: 32, speed: 2.6, weight: 1.8, possible: ['boiled', 'can'], reward: 180 }, // 독자형 스퀴드 세팅
+            '문어': { type: 'octopus', color: '#be123c', stripeColor: '#881337', size: 36, speed: 1.4, weight: 3.0, possible: ['boiled', 'can'], reward: 220 },
+            '낙지': { type: 'nakji', color: '#ff6b9d', stripeColor: '#ffffff', size: 24, speed: 2.0, weight: 1.2, possible: ['boiled', 'can'], reward: 150 }, // 낙지 세부조정
+            '조개': { type: 'shell', color: '#e2e8f0', stripeColor: '#94a3b8', size: 22, speed: 0.3, weight: 1.0, possible: ['boiled', 'can'], reward: 80 },
+            '가리비': { type: 'shell', color: '#fdba74', stripeColor: '#c2410c', size: 26, speed: 0.4, weight: 1.4, possible: ['boiled', 'can'], reward: 130 },
+            '꽃게': { type: 'crab', color: '#ccff00', stripeColor: '#3f6212', size: 38, speed: 1.3, weight: 1.8, possible: ['boiled', 'can'], reward: 170 }, // 야광 노랑
+            '랍스터': { type: 'lobster', color: '#ff007f', stripeColor: '#4c0519', size: 42, speed: 1.1, weight: 3.5, possible: ['boiled', 'can', 'filet'], reward: 350 } // 야광 마젠타 핑크
+        };
+
+        // Game state variables
+        let score = 0;
+        let grabbedSeafood = null; 
+        let targetProcessSeafood = null; 
+        let inventory = []; 
+        let marineLife = [];
+        let bubbles = []; 
+        let seaweedLines = []; 
+
+        // Active AI lock-on target
+        let currentTargetSpecies = '고등어';
+
+        // Cooking lab state variables
+        let selectedKitchenIngredients = []; 
+        let formulatedRecipes = []; 
+        let activeChosenRecipe = null; 
+        let isCookingActive = false; 
+
+        // AI Robotic Human Hand state variables
+        const claw = {
+            x: 100,
+            y: 50,
+            baseY: 45,
+            width: 50,
+            height: 35,
+            state: 'idle', // idle, ai_seeking, grabbing, ai_retracting, releasing, resetting
+            speed: 6.5,
+            grabTimer: 0,
+            
+            // Bezier flight parameters
+            t: 0,              // 0.0 to 1.0 interpolation factor
+            startX: 100,
+            startY: 50,
+            controlX: 100,
+            controlY: 50,
+            targetFish: null,   // Lock-on target fish object reference
+            
+            // Return Bezier flight parameters
+            retractControlX: 100,
+            retractControlY: 50
+        };
+
+        function spawnSeafood(name) {
+            const spec = speciesData[name];
+            // Y-coordinate: Float comfortably in middle layer (35% to 75% height)
+            let spawnY = canvas.height * 0.35 + Math.random() * (canvas.height * 0.40);
+            const scale = canvas.width / 800;
+
+            return {
+                id: 'fish_' + Math.random().toString(36).substr(2, 9),
+                name: name,
+                type: spec.type,
+                x: Math.random() * canvas.width,
+                y: spawnY,
+                speed: spec.speed * (0.8 + Math.random() * 0.4) * (Math.random() > 0.5 ? 1 : -1),
+                color: spec.color,
+                stripeColor: spec.stripeColor,
+                size: spec.size * scale, 
+                wiggle: Math.random() * Math.PI
+            };
+        }
+
+        function initSeafood() {
+            marineLife = [];
+            
+            Object.keys(speciesData).forEach(name => {
+                const spec = speciesData[name];
+                let spawnCount = 2; 
+                
+                if (name === '꽃게' || name === '랍스터') {
+                    spawnCount = 4; // High frequency for requested species
+                } else if (spec.type === 'shell' || name === '광어') {
+                    spawnCount = 3; 
+                } else if (name === '고등어' || name === '명태' || name === '오징어' || name === '낙지') {
+                    spawnCount = 3; 
+                } else if (name === '고래' || name === '상어') {
+                    spawnCount = 1; 
+                }
+                
+                for (let i = 0; i < spawnCount; i++) {
+                    marineLife.push(spawnSeafood(name));
+                }
+            });
+
+            // Bubble particles
+            bubbles = [];
+            for (let i = 0; i < 40; i++) {
+                bubbles.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 4 + 1,
+                    speed: Math.random() * 1.5 + 0.5
+                });
+            }
+
+            // Swaying seaweed
+            seaweedLines = [];
+            for (let i = 0; i < 11; i++) {
+                seaweedLines.push({
+                    x: (canvas.width * 0.08) + (i * (canvas.width * 0.095)),
+                    height: canvas.height * 0.16 + Math.random() * (canvas.height * 0.10),
+                    phase: Math.random() * Math.PI,
+                    speed: 0.02 + Math.random() * 0.015
+                });
+            }
+        }
+
+        function initTargetSelectorMatrix() {
+            const matrixDiv = document.getElementById('targetSpeciesMatrix');
+            matrixDiv.innerHTML = '';
+            
+            Object.keys(speciesData).forEach(name => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.id = `targetBtn_${name}`;
+                btn.className = "target-species-btn py-1.5 px-1 bg-gray-900 border border-gray-800 text-gray-400 rounded-lg text-[10px] font-bold text-center hover:bg-gray-800 hover:text-white transition-all select-none truncate";
+                btn.innerText = name;
+                btn.addEventListener('click', () => {
+                    // Lock target switching during active AI flight to prevent desyncs
+                    if (claw.state !== 'idle') return;
+                    setTargetSpecies(name);
+                });
+                matrixDiv.appendChild(btn);
+            });
+            
+            setTargetSpecies('고등어');
+        }
+
+        function setTargetSpecies(name) {
+            currentTargetSpecies = name;
+            
+            document.querySelectorAll('.target-species-btn').forEach(btn => {
+                btn.classList.remove('border-emerald-500', 'bg-emerald-950/40', 'text-emerald-400', 'neon-border');
+                btn.classList.add('border-gray-800', 'bg-gray-900', 'text-gray-400');
+            });
+            
+            const activeBtn = document.getElementById(`targetBtn_${name}`);
+            if (activeBtn) {
+                activeBtn.classList.add('border-emerald-500', 'bg-emerald-950/40', 'text-emerald-400', 'neon-border');
+                activeBtn.classList.remove('border-gray-800', 'bg-gray-900', 'text-gray-400');
+            }
+            
+            playSound('coin');
+        }
+
+        function launchAutonomousHarvest() {
+            if (claw.state !== 'idle') return;
+
+            // Find nearest target fish of the selected species strictly
+            const targets = marineLife.filter(item => item.name === currentTargetSpecies);
+            if (targets.length === 0) {
+                alertBox(`수조에 현재 ${currentTargetSpecies}가 없습니다! 잠시 기다려 주세요.`);
+                return;
+            }
+
+            // Find closest candidate fish
+            let nearestFish = targets[0];
+            let minDist = 99999;
+            targets.forEach(fish => {
+                const dx = fish.x - claw.x;
+                const dy = fish.y - claw.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearestFish = fish;
+                }
+            });
+
+            // Initialize non-linear quadratic Bezier flight parameters
+            playSound('drop');
+            claw.state = 'ai_seeking';
+            claw.targetFish = nearestFish;
+            claw.t = 0;
+            claw.startX = claw.x;
+            claw.startY = claw.y;
+
+            // Calculate control point P1 to create a beautiful non-linear sweeping curve
+            const xOffset = (nearestFish.x > claw.x) ? -150 : 150;
+            claw.controlX = (claw.startX + nearestFish.x) / 2 + xOffset;
+            claw.controlY = Math.min(claw.startY, nearestFish.y) - 60; // Upward-curved swoop
+        }
+
+        function updatePhysics() {
+            // Fish swimming coordinates and bounds wrapping
+            marineLife.forEach(item => {
+                item.x += item.speed;
+                item.wiggle += (item.type === 'crab' || item.type === 'lobster') ? 0.18 : 0.06;
+                
+                if (item.x < -item.size * 2 && item.speed < 0) {
+                    item.x = canvas.width + item.size;
+                } else if (item.x > canvas.width + item.size * 2 && item.speed > 0) {
+                    item.x = -item.size;
+                }
+            });
+
+            // Bubbles rising
+            bubbles.forEach(b => {
+                b.y -= b.speed;
+                if (b.y < 0) {
+                    b.y = canvas.height;
+                    b.x = Math.random() * canvas.width;
+                }
+            });
+
+            // Base tracking bounds updates
+            claw.baseY = canvas.height * 0.12;
+            conveyor.y = canvas.height * 0.35;
+            conveyor.width = canvas.width * 0.45;
+            conveyor.x = canvas.width * 0.55;
+
+            // State Machine for Autonomous Cybernetic Hand Flight
+            if (claw.state === 'idle') {
+                // Hover gently in starting zone
+                claw.x += Math.sin(Date.now() / 400) * 0.4;
+                claw.y = claw.baseY + Math.cos(Date.now() / 300) * 2;
+            } 
+            else if (claw.state === 'ai_seeking') {
+                // Increment Bezier interpolation step
+                claw.t += 0.03; // Flight duration ~33 frames
+
+                // Safety check: verify targeted fish still exists and is correct target
+                if (!marineLife.includes(claw.targetFish) || claw.targetFish.name !== currentTargetSpecies) {
+                    // Try to re-lock strictly to nearest of current target species
+                    const newTargets = marineLife.filter(f => f.name === currentTargetSpecies);
+                    if (newTargets.length > 0) {
+                        claw.targetFish = newTargets[0];
+                    } else {
+                        // Fallback to coordinates
+                        claw.state = 'ai_retracting';
+                        claw.t = 0;
+                        claw.startX = claw.x;
+                        claw.startY = claw.y;
+                        return;
+                    }
+                }
+
+                const progress = claw.t;
+                if (progress < 1.0) {
+                    // Quadratic Bezier interpolation formula: B(t) = (1-t)^2 * P0 + 2(1-t)t * P1 + t^2 * P2
+                    const mt = 1 - progress;
+                    
+                    // Dynamic tracking: End target point moves with live fish coordinates!
+                    const targetX = claw.targetFish.x;
+                    const targetY = claw.targetFish.y;
+
+                    claw.x = (mt * mt * claw.startX) + (2 * mt * progress * claw.controlX) + (progress * progress * targetX);
+                    claw.y = (mt * mt * claw.startY) + (2 * mt * progress * claw.controlY) + (progress * progress * targetY);
+                } else {
+                    // Reach target intersection! Transition to grab action
+                    claw.x = claw.targetFish.x;
+                    claw.y = claw.targetFish.y;
+                    claw.state = 'grabbing';
+                    claw.grabTimer = 0;
+
+                    // Capture seafood target strictly by matching references
+                    const fishIndex = marineLife.indexOf(claw.targetFish);
+                    if (fishIndex !== -1 && claw.targetFish.name === currentTargetSpecies) {
+                        grabbedSeafood = claw.targetFish;
+                        marineLife.splice(fishIndex, 1);
+                        playSound('catch');
+
+                        if (grabbedSeafood.name === '오징어') {
+                            triggerSquidInk();
+                        }
+                    }
+                }
+            } 
+            else if (claw.state === 'grabbing') {
+                claw.grabTimer += 1;
+                if (claw.grabTimer > 18) {
+                    // Transition to autonomous return curve flight
+                    claw.state = 'ai_retracting';
+                    claw.t = 0;
+                    claw.startX = claw.x;
+                    claw.startY = claw.y;
+
+                    // Set return curve control point (P1)
+                    // Swing up and over gracefully towards conveyor drop-off zone
+                    claw.retractControlX = (claw.startX + (conveyor.x + 40)) / 2;
+                    claw.retractControlY = Math.min(claw.startY, conveyor.y) - 100; // High arc sweep
+                }
+            } 
+            else if (claw.state === 'ai_retracting') {
+                claw.t += 0.025; // Return speed weight penalty calculation
+
+                let weightPenalty = grabbedSeafood ? speciesData[grabbedSeafood.name].weight : 0.0;
+                const speedFactor = Math.max(0.012, 0.025 - (weightPenalty * 0.0012));
+                
+                const progress = Math.min(1.0, claw.t);
+                const mt = 1 - progress;
+
+                const destX = conveyor.x + 40;
+                const destY = conveyor.y - 20;
+
+                // Bezier curve calculations for returning home
+                claw.x = (mt * mt * claw.startX) + (2 * mt * progress * claw.retractControlX) + (progress * progress * destX);
+                claw.y = (mt * mt * claw.startY) + (2 * mt * progress * claw.retractControlY) + (progress * progress * destY);
+
+                if (grabbedSeafood) {
+                    grabbedSeafood.x = claw.x;
+                    grabbedSeafood.y = claw.y + 25;
+                }
+
+                if (progress >= 1.0) {
+                    claw.state = 'releasing';
+                }
+            } 
+            else if (claw.state === 'releasing') {
+                if (grabbedSeafood) {
+                    targetProcessSeafood = grabbedSeafood;
+                    targetProcessSeafood.x = conveyor.x + 40;
+                    targetProcessSeafood.y = conveyor.y - targetProcessSeafood.size * 0.5;
+                    grabbedSeafood = null;
+                    
+                    updateProcessButtons(targetProcessSeafood.name);
+                }
+                claw.state = 'resetting';
+            } 
+            else if (claw.state === 'resetting') {
+                // Slide back to initial home coordinates
+                const homeX = 100;
+                const homeY = claw.baseY;
+
+                const dx = homeX - claw.x;
+                const dy = homeY - claw.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist > 8) {
+                    claw.x += dx * 0.12;
+                    claw.y += dy * 0.12;
+                } else {
+                    claw.x = homeX;
+                    claw.y = homeY;
+                    claw.state = 'idle';
+                }
+            }
+        }
+
+        function triggerSquidInk() {
+            playSound('squid');
+            const ink = document.getElementById('inkOverlay');
+            ink.classList.remove('opacity-0');
+            ink.classList.add('opacity-100');
+            
+            setTimeout(() => {
+                ink.classList.remove('opacity-100');
+                ink.classList.add('opacity-0');
+            }, 3000);
+        }
+
+        function updateProcessButtons(name) {
+            const spec = speciesData[name];
+            document.getElementById('targetSpeciesBadge').innerText = `${name} 대기 중`;
+            document.getElementById('targetSpeciesBadge').className = "text-[10px] bg-emerald-950 text-emerald-400 px-2 py-0.5 rounded-md font-bold retro-font neon-text-emerald animate-pulse";
+
+            const buttons = document.querySelectorAll('.process-btn');
+            buttons.forEach(btn => {
+                const processType = btn.getAttribute('data-type');
+                if (spec.possible.includes(processType)) {
+                    btn.classList.remove('opacity-50', 'cursor-not-allowed');
+                    btn.classList.add('hover:bg-slate-800', 'border-emerald-500/50');
+                    btn.disabled = false;
+                } else {
+                    btn.classList.add('opacity-50', 'cursor-not-allowed');
+                    btn.classList.remove('hover:bg-slate-800', 'border-emerald-500/50');
+                    btn.disabled = true;
+                }
+            });
+        }
+
+        let activeProcessAnimation = null;
+
+        function triggerProcess(method) {
+            if (!targetProcessSeafood) return;
+            playSound('process');
+            
+            const item = targetProcessSeafood;
+            targetProcessSeafood = null; 
+
+            resetProcessPanel();
+
+            activeProcessAnimation = {
+                x: conveyor.x + 40,
+                y: conveyor.y - 10,
+                timer: 0,
+                maxTime: 45,
+                method: method,
+                name: item.name
+            };
+
+            score += speciesData[item.name].reward;
+            document.getElementById('scoreVal').innerText = score.toString().padStart(4, '0');
+        }
+
+        function resetProcessPanel() {
+            document.getElementById('targetSpeciesBadge').innerText = "대기 중";
+            document.getElementById('targetSpeciesBadge').className = "text-[10px] bg-slate-800 text-emerald-400 px-2 py-0.5 rounded-md font-bold retro-font";
+            const buttons = document.querySelectorAll('.process-btn');
+            buttons.forEach(btn => {
+                btn.classList.add('opacity-50', 'cursor-not-allowed');
+                btn.classList.remove('hover:bg-slate-800', 'border-emerald-500/50');
+                btn.disabled = true;
+            });
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Radiant clean transparent neon aquamarine gradient
+            let oceanGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            oceanGrad.addColorStop(0, '#062029'); 
+            oceanGrad.addColorStop(0.3, '#0b4a5c'); 
+            oceanGrad.addColorStop(0.7, '#10748c'); 
+            oceanGrad.addColorStop(1, '#0c5263'); 
+            ctx.fillStyle = oceanGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Shimmering spotlights
+            ctx.fillStyle = 'rgba(16, 233, 185, 0.08)';
+            ctx.beginPath();
+            ctx.moveTo(canvas.width * 0.15, 0);
+            ctx.lineTo(canvas.width * 0.45, canvas.height);
+            ctx.lineTo(canvas.width * 0.65, canvas.height);
+            ctx.lineTo(canvas.width * 0.35, 0);
+            ctx.fill();
+
+            // Rising water bubbles
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+            bubbles.forEach(b => {
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Floor sand mud beds
+            ctx.fillStyle = '#2b1a4a'; 
+            ctx.fillRect(0, canvas.height * 0.86, canvas.width, canvas.height * 0.14);
+            
+            ctx.fillStyle = '#6d28d9'; 
+            ctx.fillRect(0, canvas.height * 0.86, canvas.width, 5);
+
+            ctx.fillStyle = '#1c0f32'; 
+            ctx.fillRect(0, canvas.height * 0.92, canvas.width, canvas.height * 0.08);
+
+            // Seaweeds
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.65)';
+            ctx.lineWidth = 4.5;
+            ctx.lineCap = 'round';
+            seaweedLines.forEach(sw => {
+                sw.phase += sw.speed;
+                const waveOffset = Math.sin(sw.phase) * 15;
+                
+                ctx.beginPath();
+                ctx.moveTo(sw.x, canvas.height * 0.87);
+                ctx.bezierCurveTo(
+                    sw.x - waveOffset * 0.4, canvas.height * 0.87 - sw.height * 0.3,
+                    sw.x + waveOffset * 0.6, canvas.height * 0.87 - sw.height * 0.6,
+                    sw.x + waveOffset, canvas.height * 0.87 - sw.height
+                );
+                ctx.stroke();
+
+                ctx.fillStyle = 'rgba(52, 211, 153, 0.8)';
+                ctx.beginPath();
+                ctx.arc(sw.x + waveOffset, canvas.height * 0.87 - sw.height, 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Draw seafood creatures
+            marineLife.forEach(item => {
+                drawSeafoodItem(ctx, item);
+            });
+
+            // Draw neon dotted predicted AI trajectory line strictly when seeking target
+            if (claw.state === 'ai_seeking' && claw.targetFish) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(34, 211, 238, 0.75)'; // Electric Cyan neon dot line
+                ctx.lineWidth = 3;
+                ctx.setLineDash([5, 8]);
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#22d3ee';
+
+                // Reconstruct trajectory arc dynamically on screen
+                ctx.beginPath();
+                ctx.moveTo(claw.startX, claw.startY);
+                // Quadratic Bezier dot line
+                ctx.quadraticCurveTo(claw.controlX, claw.controlY, claw.targetFish.x, claw.targetFish.y);
+                ctx.stroke();
+                ctx.restore();
+            }
+
+            // [PROMPT FEEDBACK]: "굳이 복귀 시 점선으로 표시할 필요가 있을까?" -> 복귀 시 보라색 점선 궤적 그리기 코드를 완전히 삭제하였습니다!
+
+            // Conveyor assembly line
+            ctx.fillStyle = '#1e293b'; 
+            ctx.fillRect(conveyor.x, conveyor.y, conveyor.width, conveyor.height);
+            
+            ctx.strokeStyle = '#0f172a';
+            ctx.lineWidth = 3.5;
+            for (let offset = 0; offset < conveyor.width; offset += 25) {
+                const scrollX = conveyor.x + offset + (Date.now() / 20) % 25;
+                if (scrollX < conveyor.x + conveyor.width) {
+                    ctx.beginPath();
+                    ctx.moveTo(scrollX, conveyor.y);
+                    ctx.lineTo(scrollX - 8, conveyor.y + conveyor.height);
+                    ctx.stroke();
+                }
+            }
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(conveyor.x + 10, conveyor.y - 18, 60, 14);
+            ctx.fillStyle = '#f87171';
+            ctx.font = 'bold 9px DungGeunMo';
+            ctx.fillText("HACCP 대기", conveyor.x + 12, conveyor.y - 8);
+
+            if (targetProcessSeafood) {
+                drawSeafoodItem(ctx, targetProcessSeafood);
+            }
+
+            // Draw structural flexible crane support wires
+            ctx.save();
+            ctx.strokeStyle = 'rgba(203, 213, 225, 0.8)';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 4;
+            ctx.shadowColor = '#ffffff';
+
+            ctx.beginPath();
+            ctx.moveTo(claw.x, claw.baseY);
+            ctx.lineTo(claw.x, claw.y);
+            ctx.stroke();
+            ctx.restore();
+
+            // Draw sliding carriage carriage at top rail
+            ctx.fillStyle = '#475569';
+            ctx.fillRect(claw.x - 20, claw.baseY - 6, 40, 12);
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(claw.x - 12, claw.baseY - 3, 24, 6);
+
+            ctx.save();
+            ctx.translate(claw.x, claw.y);
+
+            // Wrist interface sleeve
+            ctx.fillStyle = '#10b981';
+            ctx.fillRect(-14, -14, 28, 16);
+            ctx.fillStyle = '#047857';
+            ctx.fillRect(-14, -18, 28, 4);
+
+            // Status light emitting diode
+            ctx.fillStyle = (claw.state === 'ai_seeking' || claw.state === 'ai_retracting') ? '#ef4444' : '#10b981';
+            ctx.beginPath();
+            ctx.arc(0, -6, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Robotic palm base
+            ctx.fillStyle = '#cbd5e1';
+            ctx.beginPath();
+            ctx.moveTo(-12, 2);
+            ctx.lineTo(12, 2);
+            ctx.lineTo(10, 16);
+            ctx.lineTo(-10, 16);
+            ctx.closePath();
+            ctx.fill();
+
+            // Suture joints
+            ctx.strokeStyle = '#94a3b8';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-7, 8);
+            ctx.lineTo(7, 8);
+            ctx.stroke();
+
+            // Arm finger joints depending on state (Clutch Fist vs Open Hand)
+            const isGrabbing = (claw.state === 'grabbing' || claw.state === 'ai_retracting' || claw.state === 'releasing');
+
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#cbd5e1';
+
+            if (!isGrabbing) {
+                // Open Cyber hand reaching targets (Open Fingers)
+                // Pinky
+                ctx.beginPath(); ctx.moveTo(-8, 15); ctx.lineTo(-15, 28); ctx.stroke();
+                // Ring
+                ctx.beginPath(); ctx.moveTo(-3, 16); ctx.lineTo(-7, 32); ctx.stroke();
+                // Middle
+                ctx.beginPath(); ctx.moveTo(2, 16); ctx.lineTo(3, 34); ctx.stroke();
+                // Index
+                ctx.beginPath(); ctx.moveTo(7, 15); ctx.lineTo(11, 30); ctx.stroke();
+                // Thumb
+                ctx.beginPath(); ctx.moveTo(-10, 6); ctx.quadraticCurveTo(-18, 10, -16, 18); ctx.stroke();
+            } else {
+                // Grabbed targets with closed fist clutching fish
+                ctx.strokeStyle = '#a1a1aa';
+                // Pinky closed
+                ctx.beginPath(); ctx.moveTo(-8, 15); ctx.quadraticCurveTo(-12, 24, -4, 25); ctx.stroke();
+                // Ring closed
+                ctx.beginPath(); ctx.moveTo(-3, 16); ctx.quadraticCurveTo(-6, 26, 0, 26); ctx.stroke();
+                // Middle closed
+                ctx.beginPath(); ctx.moveTo(2, 16); ctx.quadraticCurveTo(4, 26, -1, 26); ctx.stroke();
+                // Index closed
+                ctx.beginPath(); ctx.moveTo(7, 15); ctx.quadraticCurveTo(11, 24, 3, 24); ctx.stroke();
+                // Thumb closed
+                ctx.beginPath(); ctx.moveTo(-10, 6); ctx.quadraticCurveTo(-14, 15, -4, 16); ctx.stroke();
+            }
+
+            ctx.restore();
+
+            if (grabbedSeafood) {
+                drawSeafoodItem(ctx, grabbedSeafood);
+            }
+
+            // Chemical processing graphical sparks and glows
+            if (activeProcessAnimation) {
+                const anim = activeProcessAnimation;
+                anim.timer += 1;
+
+                ctx.fillStyle = '#f59e0b';
+                for (let i = 0; i < 8; i++) {
+                    const sparkX = anim.x + (Math.random() - 0.5) * 45;
+                    const sparkY = anim.y + (Math.random() - 0.5) * 25;
+                    ctx.beginPath();
+                    ctx.arc(sparkX, sparkY, Math.random() * 3.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+
+                if (anim.method === 'filet') {
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 4;
+                    ctx.beginPath();
+                    ctx.moveTo(anim.x - 22, anim.y - 12 + (anim.timer % 8));
+                    ctx.lineTo(anim.x + 22, anim.y + 12 - (anim.timer % 8));
+                    ctx.stroke();
+                } else if (anim.method === 'boiled') {
+                    ctx.fillStyle = 'rgba(253, 244, 245, 0.45)';
+                    ctx.beginPath();
+                    ctx.arc(anim.x, anim.y - 10 - (anim.timer % 12), 7 + (anim.timer % 5), 0, Math.PI * 2);
+                    ctx.fill();
+                } else if (anim.method === 'can') {
+                    ctx.fillStyle = '#64748b';
+                    ctx.fillRect(anim.x - 16, anim.y - 30, 32, 16 + Math.sin(anim.timer * 0.5) * 8);
+                }
+
+                if (anim.timer >= anim.maxTime) {
+                    addProcessedItemToInventory(anim.name, anim.method);
+                    activeProcessAnimation = null;
+                }
+            }
+        }
+
+        function drawSeafoodItem(cCtx, item) {
+            cCtx.save();
+            cCtx.translate(item.x, item.y);
+            
+            if (item.speed > 0) {
+                cCtx.scale(-1, 1);
+            }
+
+            const tailWiggle = Math.sin(item.wiggle) * 0.28;
+
+            // Hyper fluorescent outer neon glowing auras
+            if (item.name === '꽃게') {
+                cCtx.shadowBlur = 24;
+                cCtx.shadowColor = '#ccff00'; // Super luminous yellow fluorescent neon
+            } else if (item.name === '랍스터') {
+                cCtx.shadowBlur = 24;
+                cCtx.shadowColor = '#ff007f'; // Luminous glowing magenta neon
+            } else {
+                cCtx.shadowBlur = 12;
+                cCtx.shadowColor = item.color;
+            }
+
+            if (item.type === 'fish') {
+                cCtx.fillStyle = item.color;
+                
+                if (item.name === '광어') {
+                    cCtx.beginPath();
+                    cCtx.ellipse(0, 0, item.size * 0.9, item.size * 0.55, 0, 0, Math.PI * 2);
+                    cCtx.fill();
+                    
+                    cCtx.fillStyle = '#f8fafc';
+                    cCtx.beginPath();
+                    cCtx.arc(-item.size * 0.4, -item.size * 0.12, 4, 0, Math.PI * 2);
+                    cCtx.arc(-item.size * 0.4, -item.size * 0.26, 4, 0, Math.PI * 2);
+                    cCtx.fill();
+                    
+                    cCtx.fillStyle = '#000000';
+                    cCtx.beginPath();
+                    cCtx.arc(-item.size * 0.4, -item.size * 0.12, 2, 0, Math.PI * 2);
+                    cCtx.arc(-item.size * 0.4, -item.size * 0.26, 2, 0, Math.PI * 2);
+                    cCtx.fill();
+                } else {
+                    cCtx.beginPath();
+                    cCtx.ellipse(0, 0, item.size * 0.72, item.size * 0.36, 0, 0, Math.PI * 2);
+                    cCtx.fill();
+                    
+                    cCtx.fillStyle = item.stripeColor;
+                    cCtx.beginPath();
+                    cCtx.moveTo(-item.size * 0.15, -item.size * 0.32);
+                    cCtx.lineTo(-item.size * 0.04, -item.size * 0.1);
+                    cCtx.lineTo(item.size * 0.15, -item.size * 0.32);
+                    cCtx.fill();
+
+                    cCtx.fillStyle = '#ffffff';
+                    cCtx.beginPath();
+                    cCtx.arc(-item.size * 0.42, -item.size * 0.08, 5, 0, Math.PI * 2);
+                    cCtx.fill();
+                    cCtx.fillStyle = '#000000';
+                    cCtx.beginPath();
+                    cCtx.arc(-item.size * 0.44, -item.size * 0.08, 2.5, 0, Math.PI * 2);
+                    cCtx.fill();
+                }
+
+                cCtx.save();
+                cCtx.translate(item.size * 0.7, 0);
+                cCtx.rotate(tailWiggle);
+                cCtx.fillStyle = item.stripeColor;
+                cCtx.beginPath();
+                cCtx.moveTo(0, 0);
+                cCtx.lineTo(item.size * 0.32, -item.size * 0.24);
+                cCtx.lineTo(item.size * 0.2, 0);
+                cCtx.lineTo(item.size * 0.32, item.size * 0.24);
+                cCtx.closePath();
+                cCtx.fill();
+                cCtx.restore();
+
+            } else if (item.type === 'shark') {
+                cCtx.fillStyle = item.color;
+                
+                cCtx.beginPath();
+                cCtx.ellipse(0, 0, item.size * 0.8, item.size * 0.32, 0, 0, Math.PI * 2);
+                cCtx.fill();
+
+                cCtx.beginPath();
+                cCtx.moveTo(-item.size * 0.1, -item.size * 0.25);
+                cCtx.quadraticCurveTo(-item.size * 0.3, -item.size * 0.7, -item.size * 0.4, -item.size * 0.75);
+                cCtx.quadraticCurveTo(-item.size * 0.3, -item.size * 0.4, 0.1, -item.size * 0.22);
+                cCtx.closePath();
+                cCtx.fill();
+
+                cCtx.fillStyle = '#ef4444';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.5, -item.size * 0.05, 3.5, 0, Math.PI * 2);
+                cCtx.fill();
+
+                cCtx.strokeStyle = '#334155';
+                cCtx.lineWidth = 2;
+                for (let g = 0; g < 3; g++) {
+                    cCtx.beginPath();
+                    cCtx.moveTo(-item.size * 0.3 + (g * 5), -item.size * 0.12);
+                    cCtx.lineTo(-item.size * 0.3 + (g * 5), item.size * 0.12);
+                    cCtx.stroke();
+                }
+
+                cCtx.save();
+                cCtx.translate(item.size * 0.78, 0);
+                cCtx.rotate(tailWiggle);
+                cCtx.fillStyle = item.stripeColor;
+                cCtx.beginPath();
+                cCtx.moveTo(0, 0);
+                cCtx.lineTo(item.size * 0.4, -item.size * 0.4);
+                cCtx.lineTo(item.size * 0.25, 0);
+                cCtx.lineTo(item.size * 0.4, item.size * 0.4);
+                cCtx.closePath();
+                cCtx.fill();
+                cCtx.restore();
+
+            } else if (item.type === 'whale') {
+                cCtx.fillStyle = item.color;
+                
+                cCtx.beginPath();
+                cCtx.ellipse(0, 0, item.size * 0.85, item.size * 0.45, 0, 0, Math.PI * 2);
+                cCtx.fill();
+
+                cCtx.strokeStyle = '#bae6fd';
+                cCtx.lineWidth = 1.8;
+                for (let r = 0; r < 4; r++) {
+                    cCtx.beginPath();
+                    cCtx.moveTo(-item.size * 0.5 + (r * 15), item.size * 0.2);
+                    cCtx.quadraticCurveTo(0, item.size * 0.4, item.size * 0.5, item.size * 0.15);
+                    cCtx.stroke();
+                }
+
+                cCtx.fillStyle = '#ffffff';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.55, -item.size * 0.1, 4.5, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.fillStyle = '#0f172a';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.55, -item.size * 0.1, 2, 0, Math.PI * 2);
+                cCtx.fill();
+
+                cCtx.save();
+                cCtx.translate(item.size * 0.82, 0);
+                cCtx.rotate(tailWiggle * 0.7);
+                cCtx.fillStyle = item.color;
+                cCtx.beginPath();
+                cCtx.moveTo(0, 0);
+                cCtx.quadraticCurveTo(item.size * 0.2, -item.size * 0.4, item.size * 0.35, -item.size * 0.5);
+                cCtx.quadraticCurveTo(item.size * 0.22, 0, item.size * 0.35, item.size * 0.5);
+                cCtx.quadraticCurveTo(item.size * 0.2, item.size * 0.4, 0, 0);
+                cCtx.closePath();
+                cCtx.fill();
+                cCtx.restore();
+
+            } else if (item.type === 'shell') {
+                cCtx.fillStyle = item.color;
+                
+                if (item.name === '가리비') {
+                    cCtx.beginPath();
+                    cCtx.moveTo(0, item.size * 0.6);
+                    cCtx.lineTo(-item.size * 0.8, -item.size * 0.3);
+                    cCtx.quadraticCurveTo(0, -item.size * 1.2, item.size * 0.8, -item.size * 0.3);
+                    cCtx.closePath();
+                    cCtx.fill();
+
+                    cCtx.strokeStyle = item.stripeColor;
+                    cCtx.lineWidth = 1.8;
+                    for (let angle = -0.5; angle <= 0.5; angle += 0.25) {
+                        cCtx.beginPath();
+                        cCtx.moveTo(0, item.size * 0.5);
+                        cCtx.lineTo(Math.sin(angle) * item.size * 0.8, -item.size * 0.6);
+                        cCtx.stroke();
+                    }
+                } else {
+                    cCtx.beginPath();
+                    cCtx.moveTo(-item.size, item.size * 0.4);
+                    cCtx.quadraticCurveTo(0, -item.size * 1.1, item.size, item.size * 0.4);
+                    cCtx.closePath();
+                    cCtx.fill();
+
+                    cCtx.strokeStyle = item.stripeColor;
+                    cCtx.lineWidth = 2.5;
+                    for (let angle = -0.4; angle <= 0.4; angle += 0.2) {
+                        cCtx.beginPath();
+                        cCtx.moveTo(0, -item.size * 0.1);
+                        cCtx.lineTo(Math.sin(angle) * item.size, item.size * 0.38);
+                        cCtx.stroke();
+                    }
+                }
+            } else if (item.type === 'crab') {
+                // High contrast fluorescent yellow-green Crab
+                cCtx.fillStyle = '#ccff00'; 
+                cCtx.beginPath();
+                cCtx.ellipse(0, 0, item.size * 0.85, item.size * 0.55, 0, 0, Math.PI * 2);
+                cCtx.fill();
+
+                cCtx.beginPath();
+                cCtx.moveTo(-item.size * 0.8, 0);
+                cCtx.lineTo(-item.size * 1.05, -item.size * 0.1);
+                cCtx.lineTo(-item.size * 0.75, item.size * 0.2);
+                cCtx.moveTo(item.size * 0.8, 0);
+                cCtx.lineTo(item.size * 1.05, -item.size * 0.1);
+                cCtx.lineTo(item.size * 0.75, item.size * 0.2);
+                cCtx.closePath();
+                cCtx.fill();
+
+                cCtx.fillStyle = '#ffffff';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.3, -item.size * 0.52, 4, 0, Math.PI * 2);
+                cCtx.arc(item.size * 0.3, -item.size * 0.52, 4, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.fillStyle = '#000000';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.3, -item.size * 0.52, 2, 0, Math.PI * 2);
+                cCtx.arc(item.size * 0.3, -item.size * 0.52, 2, 0, Math.PI * 2);
+                cCtx.fill();
+
+                const clawSwing = Math.sin(item.wiggle) * 0.15;
+                cCtx.strokeStyle = '#ccff00';
+                cCtx.lineWidth = 4.5;
+                
+                cCtx.save();
+                cCtx.translate(-item.size * 0.5, -item.size * 0.1);
+                cCtx.rotate(-0.2 + clawSwing);
+                cCtx.beginPath();
+                cCtx.moveTo(0, 0);
+                cCtx.quadraticCurveTo(-item.size * 0.5, -item.size * 0.4, -item.size * 0.3, -item.size * 0.7);
+                cCtx.stroke();
+                cCtx.fillStyle = '#ccff00';
+                cCtx.beginPath();
+                cCtx.ellipse(-item.size * 0.3, -item.size * 0.7, item.size * 0.2, item.size * 0.12, 0.5, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.restore();
+
+                cCtx.save();
+                cCtx.translate(item.size * 0.5, -item.size * 0.1);
+                cCtx.rotate(0.2 - clawSwing);
+                cCtx.beginPath();
+                cCtx.moveTo(0, 0);
+                cCtx.quadraticCurveTo(item.size * 0.5, -item.size * 0.4, item.size * 0.3, -item.size * 0.7);
+                cCtx.stroke();
+                cCtx.fillStyle = '#ccff00';
+                cCtx.beginPath();
+                cCtx.ellipse(item.size * 0.3, -item.size * 0.7, item.size * 0.2, item.size * 0.12, -0.5, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.restore();
+
+                cCtx.lineWidth = 3;
+                for (let i = 0; i < 3; i++) {
+                    const offset = i * 6 - 6;
+                    const walkingWave = Math.sin(item.wiggle + i * 1.5) * 6;
+                    cCtx.beginPath();
+                    cCtx.moveTo(-item.size * 0.6, offset);
+                    cCtx.lineTo(-item.size * 1.15, offset + 8 + walkingWave);
+                    cCtx.moveTo(item.size * 0.6, offset);
+                    cCtx.lineTo(item.size * 1.15, offset + 8 - walkingWave);
+                    cCtx.stroke();
+                }
+            } else if (item.type === 'squid') {
+                // [PROMPT FEEDBACK] 오징어(Squid) 디자인 전면 리빌딩! (화살코 머리 + 옆날 지느러미 + 10개 다리)
+                cCtx.fillStyle = item.color;
+                
+                // 1. 삼각형 화살 머리 지느러미 (Fins)
+                cCtx.beginPath();
+                cCtx.moveTo(-item.size * 0.5, -item.size * 0.4);
+                cCtx.lineTo(0, -item.size * 0.8);
+                cCtx.lineTo(item.size * 0.5, -item.size * 0.4);
+                cCtx.closePath();
+                cCtx.fill();
+                
+                // 2. 가늘고 긴 원통형 외투막 몸통 (Body)
+                cCtx.beginPath();
+                cCtx.ellipse(0, -item.size * 0.1, item.size * 0.28, item.size * 0.5, 0, 0, Math.PI * 2);
+                cCtx.fill();
+                
+                // 3. 똘망똘망한 두 눈
+                cCtx.fillStyle = '#ffffff';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.14, item.size * 0.2, 4.5, 0, Math.PI * 2);
+                cCtx.arc(item.size * 0.14, item.size * 0.2, 4.5, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.fillStyle = '#000000';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.14, item.size * 0.2, 2, 0, Math.PI * 2);
+                cCtx.arc(item.size * 0.14, item.size * 0.2, 2, 0, Math.PI * 2);
+                cCtx.fill();
+
+                // 4. 10개 가늘고 물결치는 촉수 (Tentacles)
+                cCtx.strokeStyle = item.color;
+                cCtx.lineWidth = 2.2;
+                cCtx.lineCap = 'round';
+                for (let i = 0; i < 6; i++) {
+                    const legOffset = (i - 2.5) * 4;
+                    const isLonger = (i === 1 || i === 4); // 두 다리는 길게 채찍다리 표현
+                    const legLength = isLonger ? item.size * 1.1 : item.size * 0.65;
+                    const legWiggle = Math.sin(item.wiggle + i * 0.8) * 8;
+                    
+                    cCtx.beginPath();
+                    cCtx.moveTo(legOffset, item.size * 0.35);
+                    cCtx.quadraticCurveTo(legOffset + legWiggle * 0.5, item.size * 0.7, legOffset + legWiggle, item.size * 0.35 + legLength);
+                    cCtx.stroke();
+                }
+
+            } else if (item.type === 'nakji') {
+                // [PROMPT FEEDBACK] 낙지(Nakji) 디자인 디테일 최적화! (타원형 머리 + 극도로 가늘고 긴 다리 8개)
+                cCtx.fillStyle = item.color;
+                
+                // 둥근 낙지 머리
+                cCtx.beginPath();
+                cCtx.ellipse(0, -item.size * 0.3, item.size * 0.32, item.size * 0.42, 0, 0, Math.PI * 2);
+                cCtx.fill();
+
+                // 세밀한 눈
+                cCtx.fillStyle = '#ffffff';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.12, -item.size * 0.2, 3, 0, Math.PI * 2);
+                cCtx.arc(item.size * 0.12, -item.size * 0.2, 3, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.fillStyle = '#000000';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.12, -item.size * 0.2, 1.5, 0, Math.PI * 2);
+                cCtx.arc(item.size * 0.12, -item.size * 0.2, 1.5, 0, Math.PI * 2);
+                cCtx.fill();
+
+                // 가늘고 물결치는 8개 다리
+                cCtx.strokeStyle = item.color;
+                cCtx.lineWidth = 1.6; // 매우 얇고 가느다란 낙지 다리 구현
+                cCtx.lineCap = 'round';
+                for (let i = 0; i < 8; i++) {
+                    const legOffset = (i - 3.5) * 3;
+                    const legWiggle = Math.sin(item.wiggle + i * 0.7) * 16; // 격렬하게 춤추는 다리
+                    cCtx.beginPath();
+                    cCtx.moveTo(legOffset, 0);
+                    cCtx.quadraticCurveTo(legOffset + legWiggle * 0.6, item.size * 0.8, legOffset + legWiggle, item.size * 1.5);
+                    cCtx.stroke();
+                }
+
+            } else if (item.type === 'octopus') {
+                // 문어 (Octopus) - 거대하고 통통한 비주얼
+                cCtx.fillStyle = item.color;
+                cCtx.beginPath();
+                cCtx.ellipse(0, -item.size * 0.1, item.size * 0.62, item.size * 0.5, 0, 0, Math.PI * 2);
+                cCtx.fill();
+
+                cCtx.fillStyle = '#ffffff';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.22, 0, 5, 0, Math.PI * 2);
+                cCtx.arc(item.size * 0.22, 0, 5, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.fillStyle = '#000000';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.22, 0, 2.5, 0, Math.PI * 2);
+                cCtx.arc(item.size * 0.22, 0, 2.5, 0, Math.PI * 2);
+                cCtx.fill();
+
+                cCtx.strokeStyle = item.color;
+                cCtx.lineWidth = 3.6; // 통통한 문어 다리
+                cCtx.lineCap = 'round';
+                for (let i = 0; i < 8; i++) {
+                    const legOffset = (i - 3.5) * 6;
+                    const legWiggle = Math.sin(item.wiggle + i * 0.5) * 10;
+                    cCtx.beginPath();
+                    cCtx.moveTo(legOffset, item.size * 0.2);
+                    cCtx.quadraticCurveTo(legOffset + legWiggle * 0.5, item.size * 0.8, legOffset + legWiggle, item.size * 1.25);
+                    cCtx.stroke();
+                }
+            } else if (item.type === 'lobster') {
+                // High contrast fluorescent violet/magenta neon Lobster
+                cCtx.fillStyle = '#ff007f'; 
+                
+                cCtx.beginPath();
+                cCtx.ellipse(0, 0, item.size * 0.78, item.size * 0.35, 0, 0, Math.PI * 2);
+                cCtx.fill();
+                
+                cCtx.fillStyle = '#ffe500'; // Fluorescent gold lines
+                for (let t = 0; t < 3; t++) {
+                    cCtx.beginPath();
+                    cCtx.ellipse(item.size * (0.6 + t * 0.18), item.size * 0.05, item.size * 0.16, item.size * 0.26, -0.1, 0, Math.PI * 2);
+                    cCtx.fill();
+                }
+                
+                cCtx.fillStyle = '#ff007f';
+                cCtx.beginPath();
+                cCtx.moveTo(item.size * 1.05, 0);
+                cCtx.lineTo(item.size * 1.38, -item.size * 0.22);
+                cCtx.lineTo(item.size * 1.25, 0);
+                cCtx.lineTo(item.size * 1.38, item.size * 0.22);
+                cCtx.closePath();
+                cCtx.fill();
+
+                cCtx.strokeStyle = '#ffe500';
+                cCtx.lineWidth = 2.2;
+                cCtx.beginPath();
+                cCtx.moveTo(-item.size * 0.6, -item.size * 0.1);
+                cCtx.quadraticCurveTo(-item.size * 1.3, -item.size * 0.4, -item.size * 1.5, -item.size * 0.5);
+                cCtx.moveTo(-item.size * 0.6, 0);
+                cCtx.quadraticCurveTo(-item.size * 1.3, item.size * 0.4, -item.size * 1.5, item.size * 0.5);
+                cCtx.stroke();
+
+                const lobsterClawSwing = Math.sin(item.wiggle) * 0.12;
+                cCtx.fillStyle = '#ff007f';
+                
+                cCtx.save();
+                cCtx.translate(-item.size * 0.5, -item.size * 0.2);
+                cCtx.rotate(0.32 + lobsterClawSwing);
+                cCtx.beginPath();
+                cCtx.ellipse(0, 0, item.size * 0.35, item.size * 0.22, 0, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.fillStyle = '#ffe500';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.1, -item.size * 0.05, 3, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.restore();
+
+                cCtx.save();
+                cCtx.translate(-item.size * 0.5, item.size * 0.2);
+                cCtx.rotate(-0.32 - lobsterClawSwing);
+                cCtx.beginPath();
+                cCtx.ellipse(0, 0, item.size * 0.35, item.size * 0.22, 0, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.fillStyle = '#ffe500';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.1, item.size * 0.05, 3, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.restore();
+
+                cCtx.strokeStyle = '#ff007f';
+                cCtx.lineWidth = 2.5;
+                for (let i = 0; i < 4; i++) {
+                    const offset = i * 5 - 10;
+                    const legWiggle = Math.sin(item.wiggle + i * 1.2) * 5;
+                    cCtx.beginPath();
+                    cCtx.moveTo(-item.size * 0.2 + offset, item.size * 0.1);
+                    cCtx.lineTo(-item.size * 0.4 + offset, item.size * 0.5 + legWiggle);
+                    cCtx.stroke();
+                }
+
+                cCtx.fillStyle = '#ffffff';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.65, -item.size * 0.08, 3.5, 0, Math.PI * 2);
+                cCtx.arc(-item.size * 0.65, item.size * 0.08, 3.5, 0, Math.PI * 2);
+                cCtx.fill();
+                cCtx.fillStyle = '#000000';
+                cCtx.beginPath();
+                cCtx.arc(-item.size * 0.65, -item.size * 0.08, 2, 0, Math.PI * 2);
+                cCtx.arc(-item.size * 0.65, item.size * 0.08, 2, 0, Math.PI * 2);
+                cCtx.fill();
+            }
+
+            cCtx.restore();
+        }
+
+        const methodMapKr = {
+            'filet': '순살 필렛',
+            'round': '라운드 원물',
+            'salt': '자반 염장',
+            'boiled': '자숙/해감',
+            'can': 'HACCP 멸균 통조림'
+        };
+
+        function addProcessedItemToInventory(speciesName, method) {
+            const newItem = {
+                id: 'item_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                species: speciesName,
+                method: method,
+                time: new Date().toLocaleTimeString('ko-KR')
+            };
+
+            inventory.unshift(newItem); 
+            updateInventoryUI();
+            playSound('coin');
+            
+            marineLife.push(spawnSeafood(speciesName));
+            checkContractCompletion();
+        }
+
+        function updateInventoryUI() {
+            const container = document.getElementById('inventorySlots');
+            document.getElementById('invCount').innerText = `${inventory.length} / 60`;
+
+            if (inventory.length === 0) {
+                container.innerHTML = `
+                    <div class="col-span-4 flex items-center justify-center h-full text-gray-600 text-[11px] retro-font">
+                        보관된 가공품이 없습니다.
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '';
+            inventory.forEach(item => {
+                const methodKr = methodMapKr[item.method] || item.method;
+                
+                let itemIcon = 'fa-prescription-bottle';
+                if (item.method === 'filet') itemIcon = 'fa-bacon';
+                else if (item.method === 'round') itemIcon = 'fa-fish';
+                else if (item.method === 'salt') itemIcon = 'fa-mortar-pestle';
+                else if (item.method === 'boiled') itemIcon = 'fa-dumpster-fire';
+
+                const inPotIndex = selectedKitchenIngredients.findIndex(loaded => loaded.id === item.id);
+                const isSelectedClass = inPotIndex !== -1 
+                    ? 'border-red-500 bg-red-950/40 ring-2 ring-red-500/50' 
+                    : 'border-gray-700 hover:border-violet-500 bg-slate-800 hover:bg-slate-750';
+
+                html += `
+                    <div onclick="toggleKitchenPotIngredient('${item.id}')" class="group relative ${isSelectedClass} rounded-xl p-1.5 flex flex-col items-center justify-center cursor-pointer transition-all shadow-md active:scale-95">
+                        ${inPotIndex !== -1 ? `
+                        <div class="absolute top-1 right-1 w-3 h-3 bg-red-500 text-[7px] text-white rounded-full flex items-center justify-center font-bold">
+                            ${inPotIndex + 1}
+                        </div>` : ''}
+                        <i class="fa-solid ${itemIcon} text-md text-violet-400 group-hover:text-emerald-400 transition-colors"></i>
+                        <span class="text-[9px] font-bold text-gray-300 mt-1 text-center truncate w-full">${item.species}</span>
+                        <span class="text-[8px] text-gray-500 text-center truncate w-full">${methodKr}</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        // Gourmet Cooking Lab Business Logic
+        function toggleKitchenPotIngredient(itemId) {
+            const item = inventory.find(i => i.id === itemId);
+            if (!item) return;
+
+            const existingIndex = selectedKitchenIngredients.findIndex(loaded => loaded.id === itemId);
+
+            if (existingIndex !== -1) {
+                selectedKitchenIngredients.splice(existingIndex, 1);
+            } else {
+                if (selectedKitchenIngredients.length >= 2) {
+                    alertBox("식재료는 최대 2개까지만 냄비에 담을 수 있습니다!");
+                    return;
+                }
+                selectedKitchenIngredients.push(item);
+                playSound('coin');
+            }
+
+            updateKitchenPotUI();
+            updateInventoryUI();
+        }
+
+        function unloadIngredient(slotIndex) {
+            if (selectedKitchenIngredients[slotIndex]) {
+                selectedKitchenIngredients.splice(slotIndex, 1);
+                playSound('coin');
+                updateKitchenPotUI();
+                updateInventoryUI();
+            }
+        }
+
+        function updateKitchenPotUI() {
+            const potSlot1 = document.getElementById('potSlot1');
+            const potSlot2 = document.getElementById('potSlot2');
+            const btnDevelop = document.getElementById('btnDevelopRecipes');
+
+            if (selectedKitchenIngredients[0]) {
+                const item = selectedKitchenIngredients[0];
+                const methodKr = methodMapKr[item.method] || item.method;
+                potSlot1.innerHTML = `
+                    <div class="text-center">
+                        <p class="text-[10px] font-bold text-emerald-400 truncate w-12">${item.species}</p>
+                        <p class="text-[8px] text-gray-400 truncate w-12">${methodKr}</p>
+                    </div>
+                `;
+                potSlot1.className = "w-14 h-14 rounded-xl border-2 border-emerald-500 bg-slate-900 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors";
+            } else {
+                potSlot1.innerHTML = `<span class="text-gray-600 text-[10px] retro-font">비었음</span>`;
+                potSlot1.className = "w-14 h-14 rounded-xl border-2 border-dashed border-gray-700 bg-slate-950 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors";
+            }
+
+            if (selectedKitchenIngredients[1]) {
+                const item = selectedKitchenIngredients[1];
+                const methodKr = methodMapKr[item.method] || item.method;
+                potSlot2.innerHTML = `
+                    <div class="text-center">
+                        <p class="text-[10px] font-bold text-emerald-400 truncate w-12">${item.species}</p>
+                        <p class="text-[8px] text-gray-400 truncate w-12">${methodKr}</p>
+                    </div>
+                `;
+                potSlot2.className = "w-14 h-14 rounded-xl border-2 border-emerald-500 bg-slate-900 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors";
+            } else {
+                potSlot2.innerHTML = `<span class="text-gray-600 text-[10px] retro-font">비었음</span>`;
+                potSlot2.className = "w-14 h-14 rounded-xl border-2 border-dashed border-gray-700 bg-slate-950 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors";
+            }
+
+            if (selectedKitchenIngredients.length > 0) {
+                btnDevelop.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnDevelop.disabled = false;
+            } else {
+                btnDevelop.classList.add('opacity-50', 'cursor-not-allowed');
+                btnDevelop.disabled = true;
+            }
+        }
+
+        async function developRecipes() {
+            if (selectedKitchenIngredients.length === 0) return;
+
+            const panel = document.getElementById('kitchenDisplayPanel');
+            const fusionContainer = document.getElementById('fusionContainer');
+            fusionContainer.classList.remove('hidden');
+
+            panel.innerHTML = `
+                <div class="flex flex-col items-center justify-center pt-8 text-violet-400">
+                    <i class="fa-solid fa-circle-notch animate-spin text-2xl mb-2"></i>
+                    <span class="retro-font text-[10px]">AI 미식 연구원이 궁극의 레시피 조합을 시뮬레이션 중...</span>
+                </div>
+            `;
+
+            const extraIngredients = document.getElementById('extraIngredients').value.trim();
+            const ingredientsDesc = selectedKitchenIngredients.map(item => `${item.species}(${methodMapKr[item.method]})`).join("와 ");
+            const extraDesc = extraIngredients ? `, 추가 부재료인 [${extraIngredients}]` : "";
+
+            const userQuery = `내가 낚고 수확한 수산물 가공 재료인 [${ingredientsDesc}]${extraDesc}를 조합하여 
+            대한민국 고급 요식업장에서 선보일 수 있는 최고급 퓨전 한식/일식 스타일 요리 레시피 2가지를 만들어 주세요.
+            각 요리는 아래의 JSON 배열 규격에 철저히 맞춰 반환해야 합니다:
+            [
+              {
+                "title": "요리 이름 (예: 매콤 칼칼한 고등어 자반 통조림 조림)",
+                "summary": "침샘을 자극하는 요리에 대한 1줄 매혹적인 미식 묘사",
+                "point": 100~300 사이의 완성도 보상 정수,
+                "step1": "1단계 조리 방법",
+                "step2": "2단계 조리 방법",
+                "step3": "3단계 조리 방법"
+              }
+            ]`;
+
+            const finalApiKey = userApiKey || ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${finalApiKey}`;
+
+            try {
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "ARRAY",
+                            items: {
+                                type: "OBJECT",
+                                properties: {
+                                    "title": { "type": "STRING" },
+                                    "summary": { "type": "STRING" },
+                                    "point": { "type": "INTEGER" },
+                                    "step1": { "type": "STRING" },
+                                    "step2": { "type": "STRING" },
+                                    "step3": { "type": "STRING" }
+                                },
+                                "required": ["title", "summary", "point", "step1", "step2", "step3"]
+                            }
+                        }
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("API_FAIL");
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                formulatedRecipes = JSON.parse(text);
+
+                renderRecipeSelectorUI();
+            } catch (err) {
+                formulatedRecipes = generateLocalGourmetFallbackRecipes();
+                renderRecipeSelectorUI();
+            }
+        }
+
+        function renderRecipeSelectorUI() {
+            const panel = document.getElementById('kitchenDisplayPanel');
+            if (formulatedRecipes.length === 0) return;
+
+            let html = `
+                <div class="space-y-2">
+                    <p class="text-[10px] text-violet-300 font-bold retro-font"><i class="fa-solid fa-receipt mr-1"></i> 개발 완료된 레시피를 선택해 요리하세요!</p>
+                    <div class="grid grid-cols-1 gap-2">
+            `;
+
+            formulatedRecipes.forEach((recipe, idx) => {
+                html += `
+                    <div onclick="selectActiveRecipe(${idx})" id="recipeCard_${idx}" class="recipe-card p-2 bg-slate-900 border border-gray-800 hover:border-violet-500 rounded-lg cursor-pointer transition-all">
+                        <div class="flex justify-between items-center mb-0.5">
+                            <span class="font-bold text-emerald-400 text-[11px]">${recipe.title}</span>
+                            <span class="text-[9px] text-amber-400 font-bold retro-font">+${recipe.point} PTS</span>
+                        </div>
+                        <p class="text-[9px] text-gray-400 italic">${recipe.summary}</p>
+                    </div>
+                `;
+            });
+
+            html += `
+                    </div>
+                    <button id="btnStartCooking" onclick="startCookingProcess()" class="w-full bg-emerald-700 hover:bg-emerald-600 active:bg-emerald-800 text-white text-[11px] font-bold py-2 rounded-lg transition-all select-none opacity-50 cursor-not-allowed" disabled>
+                        <i class="fa-solid fa-fire-burner mr-1"></i> 조리 개시 (가마솥 가동!)
+                    </button>
+                </div>
+            `;
+
+            panel.innerHTML = html;
+            activeChosenRecipe = null;
+        }
+
+        function selectActiveRecipe(index) {
+            const cards = document.querySelectorAll('.recipe-card');
+            cards.forEach(card => card.classList.remove('border-emerald-500', 'bg-emerald-950/20'));
+
+            const selectedCard = document.getElementById(`recipeCard_${index}`);
+            if (selectedCard) {
+                selectedCard.classList.add('border-emerald-500', 'bg-emerald-950/20');
+            }
+
+            activeChosenRecipe = formulatedRecipes[index];
+            const btnCook = document.getElementById('btnStartCooking');
+            if (btnCook) {
+                btnCook.classList.remove('opacity-50', 'cursor-not-allowed');
+                btnCook.disabled = false;
+            }
+            playSound('coin');
+        }
+
+        function startCookingProcess() {
+            if (!activeChosenRecipe) return;
+
+            const panel = document.getElementById('kitchenDisplayPanel');
+            isCookingActive = true;
+            playSound('sizzle');
+
+            panel.innerHTML = `
+                <div class="flex flex-col items-center justify-center py-6 text-emerald-400 relative">
+                    <div class="absolute inset-x-0 top-0 flex justify-center space-x-3 pointer-events-none">
+                        <span class="steam-bubble text-lg">💨</span>
+                        <span class="steam-bubble text-sm" style="animation-delay: 0.3s;">🫧</span>
+                        <span class="steam-bubble text-md" style="animation-delay: 0.6s;">♨️</span>
+                    </div>
+                    <i class="fa-solid fa-hot-tub-person text-3xl animate-bounce mb-3 text-red-500"></i>
+                    <span class="retro-font text-xs text-center animate-pulse">
+                        🔥 조리 진행 중! 가마솥 내부 온도 240℃ 가열 중...
+                    </span>
+                    <p class="text-[9px] text-gray-500 mt-2">수산물 성분과 야채가 조화롭게 어우러지고 있습니다...</p>
+                </div>
+            `;
+
+            setTimeout(() => {
+                completeCookingProcess();
+            }, 2200);
+        }
+
+        function completeCookingProcess() {
+            isCookingActive = false;
+            playSound('catch');
+
+            const recipe = activeChosenRecipe;
+            
+            selectedKitchenIngredients.forEach(loaded => {
+                const idx = inventory.findIndex(i => i.id === loaded.id);
+                if (idx !== -1) {
+                    inventory.splice(idx, 1);
+                }
+            });
+
+            score += recipe.point;
+            document.getElementById('scoreVal').innerText = score.toString().padStart(4, '0');
+
+            selectedKitchenIngredients = [];
+            updateKitchenPotUI();
+            updateInventoryUI();
+
+            const panel = document.getElementById('kitchenDisplayPanel');
+            panel.innerHTML = `
+                <div class="bg-gradient-to-r from-emerald-950/40 to-slate-900 p-2.5 rounded-xl border-2 border-emerald-500">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-[11px] font-bold text-emerald-400 retro-font"><i class="fa-solid fa-medal mr-1"></i> ⭐ 요리 완성! 대성공</span>
+                        <span class="text-[9px] bg-emerald-900 text-emerald-300 px-1.5 py-0.5 rounded font-bold">+${recipe.point} PTS</span>
+                    </div>
+                    <h3 class="text-xs font-bold text-gray-100 mb-1">🥘 ${recipe.title}</h3>
+                    <p class="text-[9px] text-gray-400 mb-2 italic">"${recipe.summary}"</p>
+                    <div class="text-[9px] bg-black/40 p-2 rounded border border-gray-800 space-y-1 text-gray-300">
+                        <p class="truncate"><b>1.</b> ${recipe.step1}</p>
+                        <p class="truncate"><b>2.</b> ${recipe.step2}</p>
+                        <p class="truncate"><b>3.</b> ${recipe.step3}</p>
+                    </div>
+                    <button onclick="resetKitchenPanel()" class="w-full mt-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-[10px] font-bold py-1.5 rounded transition-colors">
+                        접시 비우기 (새 요리 시작)
+                    </button>
+                </div>
+            `;
+
+            alertBox(`🎉 [${recipe.title}] 요리가 성공하여 ${recipe.point}점을 획득했습니다!`);
+            checkContractCompletion();
+        }
+
+        function resetKitchenPanel() {
+            document.getElementById('kitchenDisplayPanel').innerHTML = `
+                <p class="text-gray-500 italic text-center pt-8">수확 보관함에서 가공품을 클릭해 요리 냄비에 담아주세요.<br>선택한 수산물로 만들 수 있는 미식 레시피가 생성됩니다.</p>
+            `;
+            document.getElementById('extraIngredients').value = "";
+            document.getElementById('fusionContainer').classList.add('hidden');
+        }
+
+        function generateLocalGourmetFallbackRecipes() {
+            const main = selectedKitchenIngredients[0];
+            const sub = selectedKitchenIngredients[1];
+
+            const mainName = main ? `${main.species} ${methodMapKr[main.method]}` : "수산 원물";
+            const subName = sub ? `${sub.species} ${methodMapKr[sub.method]}` : "";
+
+            const recipe1Title = sub ? `궁극의 ${main.species} & ${sub.species} 전골` : `명품 칼칼한 ${main.species} 전골`;
+            const recipe2Title = sub ? `특제 ${main.species} ${sub.species} 갈릭 구이` : `소금 찹찹 ${main.species} 직화 석쇠 조림`;
+
+            return [
+                {
+                    title: recipe1Title,
+                    summary: "시원하고 진한 해물 육수가 깊게 밴 전통 가마솥 스타일 미식 전골",
+                    point: 150,
+                    step1: `${mainName}을(를) 정성껏 전골 냄비 바닥에 깔아 세팅합니다.`,
+                    step2: `${subName ? subName + '과(와)' : ''} 육수를 부어 한소끔 강하게 끓여냅니다.`,
+                    step3: "대파와 마늘, 기호에 맞는 청양고추를 넣어 마무리 칼칼함을 더합니다."
+                },
+                {
+                    title: recipe2Title,
+                    summary: "버터갈릭의 풍미와 수산물의 담백함이 황홀한 감칠맛을 선사하는 퓨전 팬 구이",
+                    point: 180,
+                    step1: "가열된 철판에 풍성한 버터와 다진 마늘을 얹어 튀기듯 가열합니다.",
+                    step2: `${mainName}의 양면을 앞뒤로 노릇하게 구워 감칠맛을 완성합니다.`,
+                    step3: `${subName ? subName + '의 풍미를 얹고' : ''} 가벼운 허브솔트로 피니시를 완성합니다.`
+                }
+            ];
+        }
+
+        let userApiKey = '';
+
+        function saveApiKey() {
+            const keyVal = document.getElementById('apiKeyInput').value.trim();
+            userApiKey = keyVal;
+            localStorage.setItem('fisher_claw_gemini_key', keyVal);
+            alertBox("API 키가 안전하게 적용되었습니다.");
+            generateNewAiContract();
+        }
+
+        function alertBox(msg) {
+            const box = document.createElement('div');
+            box.className = "fixed bottom-5 right-5 bg-emerald-900 border border-emerald-500 text-emerald-200 text-xs px-4 py-2.5 rounded-xl shadow-2xl z-50 retro-font animate-bounce";
+            box.innerText = `📢 ${msg}`;
+            document.body.appendChild(box);
+            setTimeout(() => {
+                box.remove();
+            }, 3000);
+        }
+
+        let currentContract = null;
+
+        async function generateNewAiContract() {
+            const display = document.getElementById('contractDisplay');
+            display.innerHTML = `
+                <div class="text-center py-2 text-violet-400">
+                    <i class="fa-solid fa-spinner animate-spin"></i> 글로벌 시세와 수급 계약을 수집하는 중...
+                </div>
+            `;
+
+            const targetSpecies = Object.keys(speciesData);
+            const targetMethods = Object.keys(methodMapKr);
+
+            const userQuery = `대한민국의 수산 시장 및 고급 일식집, 해상 부두 식당 중 임의의 바이어가 요청할 만한 '수산 가공식품 납품 의뢰'를 1개 생성해 주세요.
+            반드시 아래 형식의 JSON 객체 1개만 반환해야 합니다:
+            {
+                "client": "바이어 식당/단체 이름 (예: 광안리 요트 클럽, 힐튼 수산 뷔페)",
+                "species": "고등어, 연어, 대구, 명태, 광어, 상어, 고래, 오징어, 문어, 낙지, 조개, 가리비, 꽃게, 랍스터 중 딱 1개 택일",
+                "method": "filet, round, salt, boiled, can 중 딱 1개 택일",
+                "count": 1에서 3 사이의 정수,
+                "rewardGold": 300에서 800 사이의 보너스 점수 정수,
+                "flavorText": "이 계약이 필요한 사유를 담은 레트로 위트 가득한 한줄 묘사"
+            }`;
+
+            const finalApiKey = userApiKey || ""; 
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${finalApiKey}`;
+
+            try {
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json",
+                        responseSchema: {
+                            type: "OBJECT",
+                            properties: {
+                                "client": { "type": "STRING" },
+                                "species": { "type": "STRING" },
+                                "method": { "type": "STRING" },
+                                "count": { "type": "INTEGER" },
+                                "rewardGold": { "type": "INTEGER" },
+                                "flavorText": { "type": "STRING" }
+                            },
+                            "required": ["client", "species", "method", "count", "rewardGold", "flavorText"]
+                        }
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) throw new Error("JSON_API_FAIL");
+
+                const result = await response.json();
+                const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                currentContract = JSON.parse(text);
+
+                renderContractUI();
+            } catch (err) {
+                const fallbackClient = ["남포동 일식 대가", "자갈치 브라더스", "해운대 럭셔리 요트 연회장", "울릉도 오징어 물회 가맹점"][Math.floor(Math.random() * 4)];
+                const fallbackSpecies = targetSpecies[Math.floor(Math.random() * targetSpecies.length)];
+                const specData = speciesData[fallbackSpecies];
+                const fallbackMethod = specData.possible[Math.floor(Math.random() * specData.possible.length)];
+
+                currentContract = {
+                    client: fallbackClient,
+                    species: fallbackSpecies,
+                    method: fallbackMethod,
+                    count: Math.floor(Math.random() * 2) + 1,
+                    rewardGold: Math.floor(Math.random() * 300) + 200,
+                    flavorText: "전국적인 스마트 수산 대유행으로 긴급 주문이 도착했습니다!"
+                };
+                renderContractUI();
+            }
+        }
+
+        function renderContractUI() {
+            if (!currentContract) return;
+            const display = document.getElementById('contractDisplay');
+            const methodKr = methodMapKr[currentContract.method] || currentContract.method;
+            
+            const hasCount = inventory.filter(i => i.species === currentContract.species && i.method === currentContract.method).length;
+            const canComplete = hasCount >= currentContract.count;
+
+            display.innerHTML = `
+                <div class="space-y-1">
+                    <div class="flex justify-between items-center text-[10px]">
+                        <span class="font-bold text-emerald-400"><i class="fa-solid fa-store text-emerald-500"></i> ${currentContract.client}</span>
+                        <span class="text-amber-400 font-bold digital-font">+${currentContract.rewardGold} PTS</span>
+                    </div>
+                    <p class="text-[9px] text-gray-400 italic">"${currentContract.flavorText}"</p>
+                    <div class="flex justify-between items-center bg-slate-950 p-1.5 rounded border border-gray-850 mt-1.5">
+                        <span class="text-xs text-violet-300 font-bold">${currentContract.species} [${methodKr}]</span>
+                        <span class="text-xs font-bold ${canComplete ? 'text-emerald-400' : 'text-red-500'}">
+                            (${hasCount} / ${currentContract.count})
+                        </span>
+                    </div>
+                    <button onclick="submitContract()" ${canComplete ? '' : 'disabled'} class="w-full mt-1.5 text-center text-[10px] font-bold p-1.5 rounded transition-all select-none ${canComplete ? 'bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white cursor-pointer shadow-lg' : 'bg-gray-800 text-gray-500 cursor-not-allowed'}" id="contractSubmitBtn">
+                        <i class="fa-solid fa-truck-ramp-box mr-1"></i> ${canComplete ? '의뢰 수하물 즉시 선적 (납품 완료!)' : '인벤토리에 가공품이 부족합니다'}
+                    </button>
+                </div>
+            `;
+        }
+
+        function checkContractCompletion() {
+            if (currentContract) {
+                renderContractUI();
+            }
+        }
+
+        function submitContract() {
+            if (!currentContract) return;
+            
+            let matchedIndices = [];
+            for (let i = 0; i < inventory.length; i++) {
+                if (inventory[i].species === currentContract.species && inventory[i].method === currentContract.method) {
+                    matchedIndices.push(i);
+                    if (matchedIndices.length === currentContract.count) break;
+                }
+            }
+
+            if (matchedIndices.length < currentContract.count) return;
+
+            matchedIndices.sort((a,b) => b-a).forEach(idx => {
+                inventory.splice(idx, 1);
+            });
+
+            score += currentContract.rewardGold;
+            document.getElementById('scoreVal').innerText = score.toString().padStart(4, '0');
+            updateInventoryUI();
+            
+            playSound('coin');
+            alertBox(`${currentContract.client} 계약 납품에 성공하여 ${currentContract.rewardGold}점을 획득했습니다! 🎉`);
+            
+            currentContract = null;
+            generateNewAiContract();
+        }
+
+        const btnGrab = document.getElementById('btnGrab');
+        const btnMute = document.getElementById('btnMute');
+        const muteIcon = document.getElementById('muteIcon');
+        const btnBgmToggle = document.getElementById('btnBgmToggle');
+        const bgmIcon = document.getElementById('bgmIcon');
+
+        btnMute.addEventListener('click', () => {
+            isMuted = !isMuted;
+            if (isMuted) {
+                muteIcon.className = "fa-solid fa-volume-xmark text-red-500";
+                alertBox("효과음이 음소거되었습니다.");
+            } else {
+                muteIcon.className = "fa-solid fa-volume-high text-emerald-400";
+                alertBox("효과음이 활성화되었습니다.");
+            }
+        });
+
+        btnBgmToggle.addEventListener('click', () => {
+            initAudio();
+            isBgmOn = !isBgmOn;
+            
+            if (isBgmOn) {
+                startBgmEngine();
+                bgmIcon.className = "fa-solid fa-music text-emerald-400 animate-spin";
+                alertBox("🎵 배경음악(BGM)이 켜졌습니다!");
+            } else {
+                stopBgmEngine();
+                bgmIcon.className = "fa-solid fa-music text-gray-500";
+                alertBox("🔈 배경음악(BGM)이 꺼졌습니다.");
+            }
+        });
+
+        // Trigger AI Autonomous curved swoop on Harvest click
+        btnGrab.addEventListener('click', (e) => {
+            e.preventDefault();
+            launchAutonomousHarvest();
+        });
+
+        btnGrab.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            launchAutonomousHarvest();
+        });
+
+        // Keyboard trigger binds (Spacebar or Down Arrow)
+        window.addEventListener('keydown', (e) => {
+            if (e.repeat) return; 
+            if (e.code === 'Space' || e.code === 'ArrowDown') {
+                e.preventDefault();
+                launchAutonomousHarvest();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+        });
+
+        function runGameLoop() {
+            updatePhysics();
+            drawScene();
+            requestAnimationFrame(runGameLoop);
+        }
+
+        function launchSystem() {
+            resizeCanvas();
+            initSeafood();
+            initTargetSelectorMatrix();
+
+            const savedKey = localStorage.getItem('fisher_claw_gemini_key');
+            if (savedKey) {
+                const keyInput = document.getElementById('apiKeyInput');
+                if (keyInput) {
+                    keyInput.value = savedKey;
+                }
+                userApiKey = savedKey;
+            }
+
+            generateNewAiContract();
+            runGameLoop();
+        }
+
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            launchSystem();
+        } else {
+            window.addEventListener('DOMContentLoaded', launchSystem);
+        }
+    </script>
+</body>
+</html>
