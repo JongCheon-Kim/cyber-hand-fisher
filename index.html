@@ -1,17 +1,18 @@
+
 <!DOCTYPE html>
+
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fisher-Claw AI: 스마트 피지컬 수산 오락기</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=DungGeunMo&family=Orbitron:wght@400;700;900&family=Noto+Sans+KR:wght@300;500;700;900&display=swap" rel="stylesheet">
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fisher-Claw AI: 모바일 API 입력 안정화 오락기</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=DungGeunMo&amp;family=Orbitron:wght@400;700;900&amp;family=Noto+Sans+KR:wght@300;500;700;900&amp;display=swap" rel="stylesheet"/>
+<!-- FontAwesome Icons -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
+<style>
         body {
             font-family: 'Noto Sans KR', sans-serif;
             background-color: #0b0d12;
@@ -25,17 +26,17 @@
             font-family: 'Orbitron', sans-serif;
         }
         .neon-border {
-            box-shadow: 0 0 12px #10b981, inset 0 0 6px #10b981;
+            box-shadow: 0 0 4px rgba(16, 185, 129, 0.75);
             border: 2px solid #10b981;
         }
         .neon-text-emerald {
-            text-shadow: 0 0 5px #10b981, 0 0 10px #10b981;
+            text-shadow: 0 0 2px rgba(16, 185, 129, 0.8);
         }
         .neon-text-violet {
-            text-shadow: 0 0 5px #8b5cf6, 0 0 10px #8b5cf6;
+            text-shadow: 0 0 2px rgba(139, 92, 246, 0.8);
         }
         .neon-border-violet {
-            box-shadow: 0 0 12px #8b5cf6, inset 0 0 6px #8b5cf6;
+            box-shadow: 0 0 4px rgba(139, 92, 246, 0.75);
             border: 2px solid #8b5cf6;
         }
         @keyframes bubbleUp {
@@ -45,6 +46,26 @@
         }
         .steam-bubble {
             animation: bubbleUp 1.2s infinite ease-in-out;
+        }
+
+        /* 모바일 최적화 */
+        #gameCanvas {
+            touch-action: manipulation;
+        }
+
+        .target-species-btn {
+            min-height: 38px;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        @media (max-width: 639px) {
+            body { padding: 0.25rem; }
+            #overlayText { display: none !important; }
+            .target-species-btn {
+                min-height: 42px;
+                font-size: 11px;
+            }
         }
         ::-webkit-scrollbar {
             width: 6px;
@@ -59,214 +80,374 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #10b981;
         }
-    </style>
+    
+        /* 모바일 단일 화면 탭 제어 */
+        #mobileControlTabs {
+            margin-bottom: 0.6rem;
+        }
+
+        .mobile-tab-grid {
+            display: grid;
+            grid-template-columns: repeat(5, minmax(0, 1fr));
+            gap: 0.35rem;
+        }
+
+        .mobile-tab-btn {
+            min-height: 48px;
+            padding: 0.35rem 0.15rem;
+            border: 1px solid #334155;
+            border-radius: 0.65rem;
+            background: #111827;
+            color: #94a3b8;
+            font-size: 9px;
+            font-weight: 700;
+            line-height: 1.1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.2rem;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .mobile-tab-btn i {
+            font-size: 13px;
+        }
+
+        .mobile-tab-btn.active {
+            color: #34d399;
+            border-color: #10b981;
+            background: rgba(6, 78, 59, 0.55);
+            box-shadow: 0 0 3px rgba(16, 185, 129, 0.7);
+        }
+@media (max-width: 1023px) {
+            #mobileControlTabs,
+#rightPanel {
+                display: none !important;
+            }
+
+            #targetViewSection {
+                margin-top: 0 !important;
+            }
+
+                min-height: 390px;
+            }
+
+                padding: 1rem;
+                border: 1px solid #4c1d95;
+                border-radius: 0.75rem;
+                background: #0f172a;
+            }
+        }
+
+        @media (max-width: 420px) {
+            .mobile-tab-btn {
+                min-height: 45px;
+                font-size: 8px;
+            }
+
+            .mobile-tab-grid {
+                gap: 0.25rem;
+            }
+        }
+
+        /* v5 안정형 모바일 오버레이 제어 */
+        @media (max-width: 1023px) {
+            #mobileControlTabs {
+                display: block !important;
+            }
+
+            #rightPanel {
+                display: none !important;
+            }
+
+            #rightPanel.mobile-panel-open {
+                display: flex !important;
+                position: fixed;
+                inset: 0;
+                z-index: 70;
+                width: 100vw !important;
+                height: 100dvh;
+                max-height: 100dvh;
+                overflow-y: auto;
+                overscroll-behavior: contain;
+                -webkit-overflow-scrolling: touch;
+                padding: 4.25rem 0.75rem 1rem !important;
+                border: 0 !important;
+                border-radius: 0 !important;
+                background: #020617 !important;
+            }
+
+            #mobilePanelClose.mobile-close-visible {
+                display: flex !important;
+            }
+
+            body.mobile-panel-lock {
+                overflow: hidden !important;
+                touch-action: none;
+            }
+
+            #rightPanel .mobile-panel-section-hidden {
+                display: none !important;
+            }
+
+            #rightPanel .mobile-panel-section-visible {
+                display: block !important;
+                width: 100%;
+                margin-top: 0 !important;
+            }
+
+            #rightPanel #kitchenViewSection.mobile-panel-section-visible {
+                display: flex !important;
+                min-height: calc(100dvh - 15rem);
+                margin-top: 0.75rem !important;
+            }
+
+            #rightPanel #inventoryViewSection.mobile-panel-section-visible {
+                display: block !important;
+                flex: 0 0 auto;
+            }
+
+            #rightPanel #processViewSection.mobile-panel-section-visible,
+            #rightPanel #inventoryViewSection.mobile-panel-section-visible,
+            #rightPanel #contractViewSection.mobile-panel-section-visible,
+            #rightPanel #apiViewSection.mobile-panel-section-visible,
+            #rightPanel #processHeaderSection.mobile-panel-section-visible {
+                margin-bottom: 0.75rem !important;
+            }
+
+            #rightPanel #apiViewSection.mobile-panel-section-visible {
+                display: flex !important;
+                padding: 1rem;
+                border: 1px solid #4c1d95;
+                border-radius: 0.75rem;
+                background: #0f172a;
+            }
+
+            #rightPanel #kitchenViewSection.api-only-mode {
+                display: flex !important;
+                min-height: auto !important;
+                padding: 1rem !important;
+            }
+
+            #rightPanel #kitchenViewSection.api-only-mode > *:not(#apiViewSection) {
+                display: none !important;
+            }
+
+            #rightPanel #kitchenViewSection.api-only-mode #apiViewSection {
+                display: flex !important;
+                width: 100%;
+                margin: 0 !important;
+            }
+        }
+</style>
+
+    <!-- PWA -->
+    <meta name="theme-color" content="#041b24">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Fisher-Claw AI">
+    <link rel="manifest" href="./manifest.json">
+    <link rel="apple-touch-icon" href="./icon-192.png">
+
 </head>
 <body class="flex flex-col min-h-screen items-center justify-start p-2 sm:p-6">
-
-    <!-- 스마트 오락기 메인 컨테이너 -->
-    <div class="w-full max-w-7xl bg-gray-900 border-4 border-gray-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col lg:flex-row">
-        
-        <!-- 왼쪽: 게임기 캐비닛 (캔버스 화면 영역) -->
-        <div class="w-full lg:w-3/5 p-4 bg-black flex flex-col items-center border-b-4 lg:border-b-0 lg:border-r-4 border-gray-800">
-            <!-- 게임기 상단 네온 타이틀 바 -->
-            <div class="w-full flex justify-between items-center bg-gray-950 px-4 py-2 rounded-xl mb-3 neon-border border-emerald-500">
-                <span class="retro-font text-emerald-400 text-lg sm:text-2xl neon-text-emerald animate-pulse">🕹️ FISHER-CLAW AI PRO</span>
-                <div class="flex items-center space-x-2">
-                    <span class="w-3 h-3 bg-red-500 rounded-full animate-ping"></span>
-                    <span class="digital-font text-xs text-gray-400">SMART NON-LINEAR AUTO SEEK ACTIVE</span>
-                </div>
-            </div>
-
-            <!-- 시뮬레이터 캔버스 컨테이너 (종횡비 4:3 유지용) -->
-            <div class="relative w-full aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden border-2 border-gray-800">
-                <canvas id="gameCanvas" class="w-full h-full block"></canvas>
-                <!-- 캔버스 위에 뜨는 가이드 텍스트 -->
-                <div id="overlayText" class="absolute top-4 left-4 pointer-events-none bg-black/60 px-3 py-1.5 rounded-lg text-xs text-gray-200 retro-font border border-gray-800">
-                    <i class="fa-solid fa-circle-info text-emerald-400 mr-1 animate-bounce"></i> 타겟 어종을 지정한 뒤 아래 HARVEST 버튼을 클릭하면 AI 손이 비선형 곡선 궤도로 자동 인터셉트합니다!
-                </div>
-                <!-- 잉크 폭탄 먹물 효과 오버레이 -->
-                <div id="inkOverlay" class="absolute inset-0 bg-black/90 pointer-events-none transition-opacity duration-500 opacity-0 flex items-center justify-center">
-                    <div class="text-center">
-                        <span class="retro-font text-purple-500 text-3xl font-bold animate-bounce">⚠️ 오징어 먹물 공격!!</span>
-                        <p class="text-xs text-gray-400 mt-2">화면이 서서히 정화되고 있습니다...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 오락기 물리 조작 판넬 -->
-            <div class="w-full mt-4 bg-gray-950 p-4 rounded-2xl border border-gray-800 flex flex-col space-y-4">
-                
-                <!-- 14대 어종별 타겟 락온 버튼 매트릭스 -->
-                <div>
-                    <span class="text-[10px] text-gray-400 retro-font mb-1.5 block">🎯 AI TARGET SELECT MATRIX (추적 및 포획할 수산물을 선택하세요)</span>
-                    <div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5" id="targetSpeciesMatrix">
-                        <!-- JS에서 동적으로 14종 버튼 생성 -->
-                    </div>
-                </div>
-
-                <!-- 조준대기 표시창을 제거하고, 획기적으로 공간을 정렬한 하단 조작 바 -->
-                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 border-t border-gray-900 pt-3">
-                    
-                    <!-- 대형 HARVEST 버튼 (클릭 시 자동 곡선 비행 개시) -->
-                    <div class="flex-1 w-full flex justify-center">
-                        <button id="btnGrab" class="w-full h-16 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 active:from-red-700 active:to-orange-700 active:translate-y-1 text-white font-extrabold text-lg rounded-2xl border-b-8 border-red-950 flex flex-col items-center justify-center shadow-lg transition-all shadow-red-600/20 active:border-b-2 select-none touch-none">
-                            <span class="retro-font text-sm leading-none">🚀 Launch AI Auto-Harvest!</span>
-                            <span class="text-[10px] text-red-200 mt-1 font-normal">비선형 자율 추적 곡선 비행 개시</span>
-                        </button>
-                    </div>
-
-                    <!-- 사운드 토글 & 코인 점수판 (충분한 공간을 가질 수 있도록 레이아웃 분할) -->
-                    <div class="flex items-center space-x-3 bg-gray-900 p-3 rounded-xl border border-gray-800 w-full sm:w-auto justify-end shrink-0">
-                        <button id="btnMute" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-red-400" title="효과음">
-                            <i id="muteIcon" class="fa-solid fa-volume-high"></i>
-                        </button>
-                        <button id="btnBgmToggle" class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-emerald-400" title="배경음악">
-                            <i id="bgmIcon" class="fa-solid fa-music"></i>
-                        </button>
-                        <div class="text-right min-w-[75px] pl-2 border-l border-gray-850">
-                            <div class="text-[9px] text-gray-500 retro-font">SCORE</div>
-                            <div id="scoreVal" class="digital-font text-xl text-emerald-400 font-bold">0000</div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
-
-        <!-- 오른쪽: 공정 제어반 및 인벤토리 & AI 미식 요리 연구소 -->
-        <div class="w-full lg:w-2/5 p-4 bg-gray-950 flex flex-col justify-between space-y-4">
-            <div>
-                <!-- 상단 헤더 -->
-                <div class="border-b border-gray-800 pb-2 flex justify-between items-center">
-                    <div>
-                        <h2 class="retro-font text-violet-400 text-md neon-text-violet"><i class="fa-solid fa-gears mr-1"></i> 피지컬 AI 공정 제어반</h2>
-                        <p class="text-[10px] text-gray-400">수확한 수산물을 조리 가공하세요!</p>
-                    </div>
-                    <span id="targetSpeciesBadge" class="text-[10px] bg-slate-800 text-emerald-400 px-2 py-1 rounded-md font-bold retro-font">대기 중</span>
-                </div>
-
-                <!-- 수산 가공 패널 -->
-                <div class="bg-gray-900 p-2 rounded-xl border border-gray-800 mt-2">
-                    <div class="grid grid-cols-5 gap-1.5" id="processGrid">
-                        <button onclick="triggerProcess('filet')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="filet" disabled>
-                            <i class="fa-solid fa-knife text-red-400 text-sm"></i>
-                            <span>순살필렛</span>
-                        </button>
-                        <button onclick="triggerProcess('round')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="round" disabled>
-                            <i class="fa-solid fa-fish text-blue-400 text-sm"></i>
-                            <span>라운드</span>
-                        </button>
-                        <button onclick="triggerProcess('salt')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="salt" disabled>
-                            <i class="fa-solid fa-cubes-salt text-yellow-500 text-sm"></i>
-                            <span>자반염장</span>
-                        </button>
-                        <button onclick="triggerProcess('boiled')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="boiled" disabled>
-                            <i class="fa-solid fa-fire-burner text-amber-500 text-sm"></i>
-                            <span>자숙해감</span>
-                        </button>
-                        <button onclick="triggerProcess('can')" class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="can" disabled>
-                            <i class="fa-solid fa-prescription-bottle text-emerald-400 text-sm"></i>
-                            <span>통조림</span>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 실시간 AI 수산물 납품 계약서 의뢰판 -->
-                <div class="mt-3 bg-slate-900 border border-violet-800/60 p-3 rounded-xl">
-                    <div class="flex justify-between items-center border-b border-violet-800/40 pb-1.5 mb-2">
-                        <span class="text-xs retro-font text-violet-300 flex items-center gap-1">
-                            <i class="fa-solid fa-file-signature text-violet-400 animate-pulse"></i> 
+<!-- 스마트 오락기 메인 컨테이너 -->
+<div class="w-full max-w-7xl bg-gray-900 border-4 border-gray-800 rounded-3xl overflow-hidden shadow-2xl flex flex-col lg:flex-row">
+<!-- 왼쪽: 게임기 캐비닛 (캔버스 화면 영역) -->
+<div class="w-full lg:w-3/5 p-4 bg-black flex flex-col items-center border-b-4 lg:border-b-0 lg:border-r-4 border-gray-800">
+<!-- 게임기 상단 네온 타이틀 바 -->
+<div class="w-full flex justify-between items-center bg-gray-950 px-4 py-2 rounded-xl mb-3 neon-border border-emerald-500">
+<span class="retro-font text-emerald-400 text-lg sm:text-2xl neon-text-emerald animate-pulse">🕹️ FISHER-CLAW AI PRO</span>
+<div class="flex items-center space-x-2">
+<span class="w-3 h-3 bg-red-500 rounded-full animate-ping"></span>
+<span class="digital-font text-xs text-gray-400">SMART NON-LINEAR AUTO SEEK ACTIVE</span>
+</div>
+</div>
+<!-- 시뮬레이터 캔버스 컨테이너 (종횡비 4:3 유지용) -->
+<div class="relative w-full aspect-[4/3] bg-slate-950 rounded-2xl overflow-hidden border-2 border-gray-800">
+<canvas class="w-full h-full block" id="gameCanvas" style="filter: contrast(1.08) saturate(0.92);"></canvas>
+<!-- 캔버스 위에 뜨는 가이드 텍스트 -->
+<!-- 잉크 폭탄 먹물 효과 오버레이 -->
+<div class="absolute inset-0 bg-black/90 pointer-events-none transition-opacity duration-500 opacity-0 flex items-center justify-center" id="inkOverlay">
+<div class="text-center">
+<span class="retro-font text-purple-500 text-3xl font-bold animate-bounce">⚠️ 오징어 먹물 공격!!</span>
+<p class="text-xs text-gray-400 mt-2">화면이 서서히 정화되고 있습니다...</p>
+</div>
+</div>
+</div>
+<!-- 오락기 물리 조작 판넬 -->
+<div class="w-full mt-4 bg-gray-950 p-4 rounded-2xl border border-gray-800 flex flex-col space-y-4"><div class="hidden" id="mobileControlTabs">
+<div class="mobile-tab-grid">
+<button class="mobile-tab-btn active" data-mobile-view="target" type="button">
+<i class="fa-solid fa-fish"></i><span>어종 선택</span>
+</button>
+<button class="mobile-tab-btn" data-mobile-view="process" type="button">
+<i class="fa-solid fa-gears"></i><span>공정·보관</span>
+</button>
+<button class="mobile-tab-btn" data-mobile-view="contract" type="button">
+<i class="fa-solid fa-file-signature"></i><span>납품 의뢰</span>
+</button>
+<button class="mobile-tab-btn" data-mobile-view="kitchen" type="button">
+<i class="fa-solid fa-kitchen-set"></i><span>요리 연구소</span>
+</button>
+<button class="mobile-tab-btn" data-mobile-view="api" type="button">
+<i class="fa-solid fa-key"></i><span>API 입력</span>
+</button>
+</div>
+</div>
+<!-- 14대 어종별 타겟 락온 버튼 매트릭스 -->
+<div id="targetViewSection">
+<span class="text-[10px] text-gray-400 retro-font mb-1.5 block">🎯 AI DIRECT HARVEST MATRIX (포획할 어종을 누르세요)</span>
+<div class="grid grid-cols-4 sm:grid-cols-7 gap-1.5" id="targetSpeciesMatrix">
+<!-- JS에서 동적으로 14종 버튼 생성 -->
+</div>
+</div>
+<!-- 하단 상태 조작 바 -->
+<div class="flex justify-end items-center border-t border-gray-900 pt-3">
+<!-- 사운드 토글 & 점수판 -->
+<div class="flex items-center space-x-3 bg-gray-900 p-3 rounded-xl border border-gray-800 w-full sm:w-auto justify-end shrink-0">
+<button class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-red-400" id="btnMute" title="효과음">
+<i class="fa-solid fa-volume-high" id="muteIcon"></i>
+</button>
+<button class="w-10 h-10 bg-gray-800 hover:bg-gray-700 rounded-lg flex items-center justify-center text-emerald-400" id="btnBgmToggle" title="배경음악">
+<i class="fa-solid fa-music" id="bgmIcon"></i>
+</button>
+<div class="text-right min-w-[75px] pl-2 border-l border-gray-850">
+<div class="text-[9px] text-gray-500 retro-font">SCORE</div>
+<div class="digital-font text-xl text-emerald-400 font-bold" id="scoreVal">0000</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- 오른쪽: 공정 제어반 및 인벤토리 & AI 미식 요리 연구소 -->
+<button aria-label="모바일 패널 닫기" class="hidden fixed top-3 right-3 z-[80] w-11 h-11 rounded-full bg-red-700 text-white border border-red-400 shadow-lg items-center justify-center" id="mobilePanelClose" type="button">
+<i class="fa-solid fa-xmark text-lg"></i>
+</button><div class="w-full lg:w-2/5 p-4 bg-gray-950 flex flex-col justify-between space-y-4" id="rightPanel">
+<div>
+<!-- 상단 헤더 -->
+<div class="border-b border-gray-800 pb-2 flex justify-between items-center" id="processHeaderSection">
+<div>
+<h2 class="retro-font text-violet-400 text-md neon-text-violet"><i class="fa-solid fa-gears mr-1"></i> 피지컬 AI 공정 제어반</h2>
+<p class="text-[10px] text-gray-400">수확한 수산물을 조리 가공하세요!</p>
+</div>
+<span class="text-[10px] bg-slate-800 text-emerald-400 px-2 py-1 rounded-md font-bold retro-font" id="targetSpeciesBadge">대기 중</span>
+</div>
+<!-- 수산 가공 패널 -->
+<div class="bg-gray-900 p-2 rounded-xl border border-gray-800 mt-2" id="processViewSection">
+<div class="grid grid-cols-5 gap-1.5" id="processGrid">
+<button class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="filet" disabled="" onclick="triggerProcess('filet')">
+<i class="fa-solid fa-knife text-red-400 text-sm"></i>
+<span>순살필렛</span>
+</button>
+<button class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="round" disabled="" onclick="triggerProcess('round')">
+<i class="fa-solid fa-fish text-blue-400 text-sm"></i>
+<span>라운드</span>
+</button>
+<button class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="salt" disabled="" onclick="triggerProcess('salt')">
+<i class="fa-solid fa-cubes-salt text-yellow-500 text-sm"></i>
+<span>자반염장</span>
+</button>
+<button class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="boiled" disabled="" onclick="triggerProcess('boiled')">
+<i class="fa-solid fa-fire-burner text-amber-500 text-sm"></i>
+<span>자숙해감</span>
+</button>
+<button class="process-btn p-1.5 bg-gray-800 text-gray-300 rounded-lg border border-gray-700 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 opacity-50 cursor-not-allowed transition-all" data-type="can" disabled="" onclick="triggerProcess('can')">
+<i class="fa-solid fa-prescription-bottle text-emerald-400 text-sm"></i>
+<span>통조림</span>
+</button>
+</div>
+</div>
+<!-- 실시간 AI 수산물 납품 계약서 의뢰판 -->
+<div class="mt-3 bg-slate-900 border border-violet-800/60 p-3 rounded-xl" id="contractViewSection">
+<div class="flex justify-between items-center border-b border-violet-800/40 pb-1.5 mb-2">
+<span class="text-xs retro-font text-violet-300 flex items-center gap-1">
+<i class="fa-solid fa-file-signature text-violet-400 animate-pulse"></i> 
                             AI 수산 실시간 납품 의뢰판
                         </span>
-                        <button onclick="generateNewAiContract()" class="text-[9px] bg-violet-950 hover:bg-violet-900 border border-violet-700 text-violet-300 px-2 py-0.5 rounded transition-colors">
-                            <i class="fa-solid fa-rotate mr-1"></i>새 의뢰 갱신
+<button class="text-[9px] bg-violet-950 hover:bg-violet-900 border border-violet-700 text-violet-300 px-2 py-0.5 rounded transition-colors" onclick="generateNewAiContract()">
+<i class="fa-solid fa-rotate mr-1"></i>새 의뢰 갱신
                         </button>
-                    </div>
-                    <div id="contractDisplay" class="text-[11px] text-gray-300 min-h-[50px] flex flex-col justify-between">
-                        <p class="text-gray-500 text-center py-2">AI가 신규 글로벌 계약을 분석 중입니다...</p>
-                    </div>
-                </div>
-
-                <!-- 생산물 인벤토리 (보관고) -->
-                <div class="mt-3">
-                    <div class="flex justify-between items-center mb-1.5">
-                        <span class="text-xs text-gray-400 retro-font"><i class="fa-solid fa-boxes-stacked mr-1"></i> 수확 보관함 <span class="text-[10px] text-violet-400">(요리할 품목 선택, 최대 2개)</span></span>
-                        <span id="invCount" class="text-[10px] text-gray-500 font-bold">0 / 60</span>
-                    </div>
-                    <!-- 격자형 아이템 슬롯들 -->
-                    <div id="inventorySlots" class="grid grid-cols-4 gap-1.5 bg-slate-900/60 p-2.5 rounded-xl border border-gray-800 h-[105px] overflow-y-auto">
-                        <div class="col-span-4 flex items-center justify-center h-full text-gray-600 text-[11px] retro-font">
+</div>
+<div class="text-[11px] text-gray-300 min-h-[50px] flex flex-col justify-between" id="contractDisplay">
+<p class="text-gray-500 text-center py-2">AI가 신규 글로벌 계약을 분석 중입니다...</p>
+</div>
+</div>
+<!-- 생산물 인벤토리 (보관고) -->
+<div class="mt-3" id="inventoryViewSection">
+<div class="flex justify-between items-center mb-1.5">
+<span class="text-xs text-gray-400 retro-font"><i class="fa-solid fa-boxes-stacked mr-1"></i> 수확 보관함 <span class="text-[10px] text-violet-400">(품목을 눌러 요리연구소에 담기, 최대 2개)</span></span>
+<span class="text-[10px] text-gray-500 font-bold" id="invCount">0 / 60</span>
+</div>
+<!-- 격자형 아이템 슬롯들 -->
+<div class="grid grid-cols-4 gap-1.5 bg-slate-900/60 p-2.5 rounded-xl border border-gray-800 h-[105px] overflow-y-auto" id="inventorySlots">
+<div class="col-span-4 flex items-center justify-center h-full text-gray-600 text-[11px] retro-font">
                             보관된 가공품이 없습니다.
                         </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- 하단: AI 미식 요리 연구소 -->
-            <div class="bg-gradient-to-b from-gray-900 to-slate-950 p-3.5 rounded-xl border border-violet-900 flex flex-col justify-between space-y-2.5">
-                <div class="flex items-center justify-between border-b border-violet-900/40 pb-1.5">
-                    <span class="text-xs retro-font text-violet-400 font-bold"><i class="fa-solid fa-kitchen-set mr-1 text-violet-500"></i> 🍳 AI 미식 요리 연구소</span>
-                    <div class="flex items-center gap-1.5">
-                        <span class="text-[8px] bg-violet-900/50 text-violet-300 px-1.5 py-0.5 rounded border border-violet-700">GEMINI 3.1 GOURMET</span>
-                    </div>
-                </div>
-                
-                <!-- 요리 냄비 -->
-                <div class="flex justify-around items-center bg-slate-900/80 p-2 rounded-xl border border-gray-800">
-                    <div class="flex flex-col items-center">
-                        <span class="text-[9px] text-gray-500 retro-font mb-1">식재료 1</span>
-                        <div id="potSlot1" onclick="unloadIngredient(0)" class="w-14 h-14 rounded-xl border-2 border-dashed border-gray-700 bg-slate-950 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors">
-                            <span class="text-gray-600 text-[10px] retro-font">비었음</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col items-center justify-center">
-                        <i class="fa-solid fa-plus text-gray-600 animate-pulse"></i>
-                    </div>
-                    <div class="flex flex-col items-center">
-                        <span class="text-[9px] text-gray-500 retro-font mb-1">식재료 2</span>
-                        <div id="potSlot2" onclick="unloadIngredient(1)" class="w-14 h-14 rounded-xl border-2 border-dashed border-gray-700 bg-slate-950 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors">
-                            <span class="text-gray-600 text-[10px] retro-font">비었음</span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col justify-center items-stretch space-y-1">
-                        <button id="btnDevelopRecipes" onclick="developRecipes()" class="bg-violet-800 hover:bg-violet-700 text-white text-[10px] font-bold py-2 px-3 rounded-lg transition-colors select-none opacity-50 cursor-not-allowed" disabled>
-                            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>레시피 개발
+</div>
+</div>
+</div>
+<!-- 하단: AI 미식 요리 연구소 -->
+<div class="bg-gradient-to-b from-gray-900 to-slate-950 p-3.5 rounded-xl border border-violet-900 flex flex-col justify-between space-y-2.5" id="kitchenViewSection">
+<div class="flex items-center justify-between border-b border-violet-900/40 pb-1.5">
+<span class="text-xs retro-font text-violet-400 font-bold"><i class="fa-solid fa-kitchen-set mr-1 text-violet-500"></i> 🍳 AI 미식 요리 연구소</span>
+<div class="flex items-center gap-1.5">
+<span class="text-[8px] bg-violet-900/50 text-violet-300 px-1.5 py-0.5 rounded border border-violet-700">GEMINI 3.1 GOURMET</span>
+</div>
+</div>
+<!-- 요리 냄비 -->
+<div class="flex justify-around items-center bg-slate-900/80 p-2 rounded-xl border border-gray-800">
+<div class="flex flex-col items-center">
+<span class="text-[9px] text-gray-500 retro-font mb-1">식재료 1</span>
+<div class="w-14 h-14 rounded-xl border-2 border-dashed border-gray-700 bg-slate-950 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors" id="potSlot1" onclick="unloadIngredient(0)">
+<span class="text-gray-600 text-[10px] retro-font">비었음</span>
+</div>
+</div>
+<div class="flex flex-col items-center justify-center">
+<i class="fa-solid fa-plus text-gray-600 animate-pulse"></i>
+</div>
+<div class="flex flex-col items-center">
+<span class="text-[9px] text-gray-500 retro-font mb-1">식재료 2</span>
+<div class="w-14 h-14 rounded-xl border-2 border-dashed border-gray-700 bg-slate-950 flex flex-col items-center justify-center cursor-pointer hover:border-red-500 transition-colors" id="potSlot2" onclick="unloadIngredient(1)">
+<span class="text-gray-600 text-[10px] retro-font">비었음</span>
+</div>
+</div>
+<div class="flex flex-col justify-center items-stretch space-y-1">
+<button class="bg-violet-800 hover:bg-violet-700 text-white text-[10px] font-bold py-2 px-3 rounded-lg transition-colors select-none opacity-50 cursor-not-allowed" disabled="" id="btnDevelopRecipes" onclick="developRecipes()">
+<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>레시피 개발
                         </button>
-                    </div>
-                </div>
-
-                <!-- 조리 시뮬레이션 및 요리 완성 피드백 구역 -->
-                <div id="kitchenDisplayPanel" class="text-[11px] text-gray-300 leading-relaxed min-h-[140px] max-h-[160px] overflow-y-auto pr-1">
-                    <p class="text-gray-500 italic text-center pt-8">수확 보관함에서 가공품을 클릭해 요리 냄비에 담아주세요.<br>선택한 수산물로 만들 수 있는 미식 레시피가 생성됩니다.</p>
-                </div>
-
-                <!-- 부재료 냉장고 파먹기 레시피 융합 인풋 (선택 사항) -->
-                <div id="fusionContainer" class="hidden bg-slate-900 p-2 rounded-lg border border-violet-900/40">
-                    <p class="text-[9px] text-violet-300 font-bold mb-1"><i class="fa-solid fa-mortar-pestle mr-1"></i> 냉장고 속 부재료 추가 (선택 입력)</p>
-                    <div class="flex gap-1.5">
-                        <input type="text" id="extraIngredients" placeholder="예: 고추장, 치즈, 양파, 라면사리" class="flex-1 bg-slate-950 text-[10px] text-gray-200 px-2 py-1 rounded border border-gray-800 focus:outline-none focus:border-violet-500">
-                    </div>
-                </div>
-
-                <!-- API Key 입력 영역 -->
-                <div class="pt-2 border-t border-gray-800 flex items-center justify-between gap-1.5">
-                    <div class="relative flex-1">
-                        <input type="password" id="apiKeyInput" placeholder="Gemini API Key (비우면 시뮬레이터 자체 제공 키 사용)" class="w-full text-[9px] bg-slate-900 text-gray-300 px-2 py-1.5 rounded-lg border border-gray-850 focus:outline-none focus:border-violet-500 placeholder-gray-600">
-                    </div>
-                    <button onclick="saveApiKey()" class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg shrink-0 transition-colors">적용</button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- 푸터 -->
-    <div class="w-full max-w-7xl mt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 px-4 gap-2">
-        <span>© 2026 Fisher-Claw AI Inc. All rights reserved.</span>
-        <span class="retro-font text-emerald-500"><i class="fa-solid fa-gavel mr-1"></i> 해양수산법령 분석 엔진(FisherLaw) 및 Gemini LLM 연계 기술 데모</span>
-    </div>
-
-    <script>
+</div>
+</div>
+<!-- 조리 시뮬레이션 및 요리 완성 피드백 구역 -->
+<div class="text-[11px] text-gray-300 leading-relaxed min-h-[140px] max-h-[160px] overflow-y-auto pr-1" id="kitchenDisplayPanel">
+<p class="text-gray-500 italic text-center pt-8">수확 보관함에서 가공품을 클릭해 요리 냄비에 담아주세요.<br/>선택한 수산물로 만들 수 있는 미식 레시피가 생성됩니다.</p>
+</div>
+<!-- 부재료 냉장고 파먹기 레시피 융합 인풋 (선택 사항) -->
+<div class="hidden bg-slate-900 p-2 rounded-lg border border-violet-900/40" id="fusionContainer">
+<p class="text-[9px] text-violet-300 font-bold mb-1"><i class="fa-solid fa-mortar-pestle mr-1"></i> 냉장고 속 부재료 추가 (선택 입력)</p>
+<div class="flex gap-1.5">
+<input class="flex-1 bg-slate-950 text-[10px] text-gray-200 px-2 py-1 rounded border border-gray-800 focus:outline-none focus:border-violet-500" id="extraIngredients" placeholder="예: 고추장, 치즈, 양파, 라면사리" type="text"/>
+</div>
+</div>
+<!-- API Key 입력 영역 -->
+<div class="pt-2 border-t border-gray-800 flex items-center justify-between gap-1.5" id="apiViewSection">
+<div class="relative flex-1">
+<input class="w-full text-[9px] bg-slate-900 text-gray-300 px-2 py-1.5 rounded-lg border border-gray-850 focus:outline-none focus:border-violet-500 placeholder-gray-600" id="apiKeyInput" placeholder="Gemini API Key (비우면 시뮬레이터 자체 제공 키 사용)" type="password"/>
+</div>
+<button class="bg-violet-700 hover:bg-violet-600 active:bg-violet-800 text-white text-[9px] font-bold px-3 py-1.5 rounded-lg shrink-0 transition-colors" onclick="saveApiKey()">적용</button>
+</div>
+</div>
+</div>
+</div>
+<!-- 푸터 -->
+<div class="w-full max-w-7xl mt-4 flex flex-col sm:flex-row justify-between items-center text-xs text-gray-500 px-4 gap-2">
+<span>© 2026 Fisher-Claw AI Inc. All rights reserved.</span>
+<span class="retro-font text-emerald-500"><i class="fa-solid fa-gavel mr-1"></i> 해양수산법령 분석 엔진(FisherLaw) 및 Gemini LLM 연계 기술 데모</span>
+</div>
+<script>
         let audioCtx = null;
         let isMuted = false;
         let isBgmOn = false; 
@@ -411,7 +592,10 @@
         }
 
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: false });
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        const isMobileDevice = () => window.matchMedia('(max-width: 639px)').matches;
 
         const conveyor = {
             x: 0,
@@ -538,7 +722,8 @@
 
             // Bubble particles
             bubbles = [];
-            for (let i = 0; i < 40; i++) {
+            const bubbleCount = isMobileDevice() ? 18 : 40;
+            for (let i = 0; i < bubbleCount; i++) {
                 bubbles.push({
                     x: Math.random() * canvas.width,
                     y: Math.random() * canvas.height,
@@ -549,7 +734,8 @@
 
             // Swaying seaweed
             seaweedLines = [];
-            for (let i = 0; i < 11; i++) {
+            const seaweedCount = isMobileDevice() ? 7 : 11;
+            for (let i = 0; i < seaweedCount; i++) {
                 seaweedLines.push({
                     x: (canvas.width * 0.08) + (i * (canvas.width * 0.095)),
                     height: canvas.height * 0.16 + Math.random() * (canvas.height * 0.10),
@@ -570,14 +756,23 @@
                 btn.className = "target-species-btn py-1.5 px-1 bg-gray-900 border border-gray-800 text-gray-400 rounded-lg text-[10px] font-bold text-center hover:bg-gray-800 hover:text-white transition-all select-none truncate";
                 btn.innerText = name;
                 btn.addEventListener('click', () => {
-                    // Lock target switching during active AI flight to prevent desyncs
+                    // 포획 진행 중에는 중복 입력 방지
                     if (claw.state !== 'idle') return;
                     setTargetSpecies(name);
+                    launchAutonomousHarvest();
                 });
                 matrixDiv.appendChild(btn);
             });
             
             setTargetSpecies('고등어');
+        }
+
+        function setTargetButtonsDisabled(disabled) {
+            document.querySelectorAll('.target-species-btn').forEach(btn => {
+                btn.disabled = disabled;
+                btn.classList.toggle('opacity-40', disabled);
+                btn.classList.toggle('cursor-not-allowed', disabled);
+            });
         }
 
         function setTargetSpecies(name) {
@@ -600,10 +795,13 @@
         function launchAutonomousHarvest() {
             if (claw.state !== 'idle') return;
 
+            setTargetButtonsDisabled(true);
+
             // Find nearest target fish of the selected species strictly
             const targets = marineLife.filter(item => item.name === currentTargetSpecies);
             if (targets.length === 0) {
                 alertBox(`수조에 현재 ${currentTargetSpecies}가 없습니다! 잠시 기다려 주세요.`);
+                setTargetButtonsDisabled(false);
                 return;
             }
 
@@ -786,6 +984,7 @@
                     claw.x = homeX;
                     claw.y = homeY;
                     claw.state = 'idle';
+                    setTargetButtonsDisabled(false);
                 }
             }
         }
@@ -862,15 +1061,15 @@
 
             // Radiant clean transparent neon aquamarine gradient
             let oceanGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            oceanGrad.addColorStop(0, '#062029'); 
-            oceanGrad.addColorStop(0.3, '#0b4a5c'); 
-            oceanGrad.addColorStop(0.7, '#10748c'); 
-            oceanGrad.addColorStop(1, '#0c5263'); 
+            oceanGrad.addColorStop(0, '#03151c');
+            oceanGrad.addColorStop(0.35, '#063747');
+            oceanGrad.addColorStop(0.72, '#07576d');
+            oceanGrad.addColorStop(1, '#063844');
             ctx.fillStyle = oceanGrad;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Shimmering spotlights
-            ctx.fillStyle = 'rgba(16, 233, 185, 0.08)';
+            ctx.fillStyle = 'rgba(16, 233, 185, 0.035)';
             ctx.beginPath();
             ctx.moveTo(canvas.width * 0.15, 0);
             ctx.lineTo(canvas.width * 0.45, canvas.height);
@@ -879,7 +1078,7 @@
             ctx.fill();
 
             // Rising water bubbles
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.22)';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.14)';
             bubbles.forEach(b => {
                 ctx.beginPath();
                 ctx.arc(b.x, b.y, b.size, 0, Math.PI * 2);
@@ -897,7 +1096,7 @@
             ctx.fillRect(0, canvas.height * 0.92, canvas.width, canvas.height * 0.08);
 
             // Seaweeds
-            ctx.strokeStyle = 'rgba(52, 211, 153, 0.65)';
+            ctx.strokeStyle = 'rgba(52, 211, 153, 0.48)';
             ctx.lineWidth = 4.5;
             ctx.lineCap = 'round';
             seaweedLines.forEach(sw => {
@@ -913,7 +1112,7 @@
                 );
                 ctx.stroke();
 
-                ctx.fillStyle = 'rgba(52, 211, 153, 0.8)';
+                ctx.fillStyle = 'rgba(52, 211, 153, 0.58)';
                 ctx.beginPath();
                 ctx.arc(sw.x + waveOffset, canvas.height * 0.87 - sw.height, 4, 0, Math.PI * 2);
                 ctx.fill();
@@ -930,7 +1129,7 @@
                 ctx.strokeStyle = 'rgba(34, 211, 238, 0.75)'; // Electric Cyan neon dot line
                 ctx.lineWidth = 3;
                 ctx.setLineDash([5, 8]);
-                ctx.shadowBlur = 10;
+                ctx.shadowBlur = 3;
                 ctx.shadowColor = '#22d3ee';
 
                 // Reconstruct trajectory arc dynamically on screen
@@ -974,8 +1173,7 @@
             ctx.save();
             ctx.strokeStyle = 'rgba(203, 213, 225, 0.8)';
             ctx.lineWidth = 2;
-            ctx.shadowBlur = 4;
-            ctx.shadowColor = '#ffffff';
+            ctx.shadowBlur = 0;
 
             ctx.beginPath();
             ctx.moveTo(claw.x, claw.baseY);
@@ -1112,13 +1310,13 @@
 
             // Hyper fluorescent outer neon glowing auras
             if (item.name === '꽃게') {
-                cCtx.shadowBlur = 24;
+                cCtx.shadowBlur = isMobileDevice() ? 2 : 5;
                 cCtx.shadowColor = '#ccff00'; // Super luminous yellow fluorescent neon
             } else if (item.name === '랍스터') {
-                cCtx.shadowBlur = 24;
+                cCtx.shadowBlur = isMobileDevice() ? 2 : 5;
                 cCtx.shadowColor = '#ff007f'; // Luminous glowing magenta neon
             } else {
-                cCtx.shadowBlur = 12;
+                cCtx.shadowBlur = isMobileDevice() ? 1 : 3;
                 cCtx.shadowColor = item.color;
             }
 
@@ -2093,7 +2291,6 @@
             generateNewAiContract();
         }
 
-        const btnGrab = document.getElementById('btnGrab');
         const btnMute = document.getElementById('btnMute');
         const muteIcon = document.getElementById('muteIcon');
         const btnBgmToggle = document.getElementById('btnBgmToggle');
@@ -2125,16 +2322,6 @@
             }
         });
 
-        // Trigger AI Autonomous curved swoop on Harvest click
-        btnGrab.addEventListener('click', (e) => {
-            e.preventDefault();
-            launchAutonomousHarvest();
-        });
-
-        btnGrab.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            launchAutonomousHarvest();
-        });
 
         // Keyboard trigger binds (Spacebar or Down Arrow)
         window.addEventListener('keydown', (e) => {
@@ -2145,8 +2332,13 @@
             }
         });
 
+        let resizeTimer = null;
         window.addEventListener('resize', () => {
-            resizeCanvas();
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                resizeCanvas();
+                initSeafood();
+            }, 180);
         });
 
         function runGameLoop() {
@@ -2179,5 +2371,106 @@
             window.addEventListener('DOMContentLoaded', launchSystem);
         }
     </script>
+<script>
+        // v5: DOM을 이동하지 않고 기존 오른쪽 패널을 모바일 오버레이로 표시한다.
+        const mobileViewMap = {
+            process: ['processHeaderSection', 'processViewSection', 'inventoryViewSection'],
+            contract: ['contractViewSection'],
+            kitchen: ['inventoryViewSection', 'kitchenViewSection'],
+            api: ['kitchenViewSection', 'apiViewSection']
+        };
+
+        function setMobileTabActive(viewName) {
+            document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.mobileView === viewName);
+            });
+        }
+
+        function hideAllRightPanelSections() {
+            const sectionIds = [
+                'processHeaderSection',
+                'processViewSection',
+                'contractViewSection',
+                'inventoryViewSection',
+                'kitchenViewSection',
+                'apiViewSection'
+            ];
+
+            sectionIds.forEach(id => {
+                const section = document.getElementById(id);
+                if (!section) return;
+                section.classList.remove('mobile-panel-section-visible');
+                section.classList.add('mobile-panel-section-hidden');
+            });
+        }
+
+        function openMobilePanel(viewName) {
+            if (!window.matchMedia('(max-width: 1023px)').matches) return;
+
+            const panel = document.getElementById('rightPanel');
+            const closeBtn = document.getElementById('mobilePanelClose');
+            if (!panel || !mobileViewMap[viewName]) return;
+
+            hideAllRightPanelSections();
+
+            const kitchenSection = document.getElementById('kitchenViewSection');
+            kitchenSection?.classList.toggle('api-only-mode', viewName === 'api');
+
+            mobileViewMap[viewName].forEach(id => {
+                const section = document.getElementById(id);
+                if (!section) return;
+                section.classList.remove('mobile-panel-section-hidden');
+                section.classList.add('mobile-panel-section-visible');
+            });
+
+            panel.classList.add('mobile-panel-open');
+            closeBtn?.classList.add('mobile-close-visible');
+            document.body.classList.add('mobile-panel-lock');
+            setMobileTabActive(viewName);
+
+            panel.scrollTop = 0;
+        }
+
+        function closeMobilePanel() {
+            const panel = document.getElementById('rightPanel');
+            const closeBtn = document.getElementById('mobilePanelClose');
+
+            panel?.classList.remove('mobile-panel-open');
+            closeBtn?.classList.remove('mobile-close-visible');
+            document.getElementById('kitchenViewSection')?.classList.remove('api-only-mode');
+            document.body.classList.remove('mobile-panel-lock');
+            setMobileTabActive('target');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.mobile-tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const viewName = btn.dataset.mobileView;
+                    if (viewName === 'target') {
+                        closeMobilePanel();
+                    } else {
+                        openMobilePanel(viewName);
+                    }
+                });
+            });
+
+            document.getElementById('mobilePanelClose')?.addEventListener('click', closeMobilePanel);
+
+            window.addEventListener('resize', () => {
+                if (!window.matchMedia('(max-width: 1023px)').matches) {
+                    closeMobilePanel();
+                }
+            });
+        });
+</script>
+<script>
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('./service-worker.js')
+                .catch(err => console.warn('Service Worker registration failed:', err));
+        });
+    }
+</script>
+
 </body>
 </html>
