@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fisher-claw-ai-v3-process-fix';
+const CACHE_NAME = 'fisher-claw-ai-v4-mobile-instant-inventory';
 const APP_SHELL = [
   './',
   './index.html',
