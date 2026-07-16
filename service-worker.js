@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fisher-claw-ai-v1';
+const CACHE_NAME = 'fisher-claw-ai-v2-mobile-fast';
 const APP_SHELL = [
   './',
   './index.html',
