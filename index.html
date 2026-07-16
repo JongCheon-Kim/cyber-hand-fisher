@@ -1050,8 +1050,21 @@
                 timer: 0,
                 maxTime: 45,
                 method: method,
-                name: item.name
+                name: item.name,
+                inventoryAdded: false
             };
+
+            // 모바일에서는 보관함 등록을 애니메이션 프레임과 분리한다.
+            // 약 0.6초 뒤 먼저 저장하고, 양자 변환·가공 연출은 끝까지 계속한다.
+            if (isCompactDevice()) {
+                const queuedAnimation = activeProcessAnimation;
+                setTimeout(() => {
+                    if (queuedAnimation && !queuedAnimation.inventoryAdded) {
+                        addProcessedItemToInventory(queuedAnimation.name, queuedAnimation.method);
+                        queuedAnimation.inventoryAdded = true;
+                    }
+                }, 600);
+            }
 
             score += speciesData[item.name].reward;
             document.getElementById('scoreVal').innerText = score.toString().padStart(4, '0');
@@ -1304,7 +1317,12 @@
                 }
 
                 if (anim.timer >= anim.maxTime) {
-                    addProcessedItemToInventory(anim.name, anim.method);
+                    // PC는 기존처럼 애니메이션 완료 시 저장한다.
+                    // 모바일은 앞서 저장했으므로 중복 등록하지 않는다.
+                    if (!anim.inventoryAdded) {
+                        addProcessedItemToInventory(anim.name, anim.method);
+                        anim.inventoryAdded = true;
+                    }
                     activeProcessAnimation = null;
                 }
             }
