@@ -2447,7 +2447,14 @@
             panel.classList.add('mobile-panel-open');
             closeBtn?.classList.add('mobile-close-visible');
             document.body.classList.add('mobile-panel-lock');
-            gameRenderingPaused = true;
+
+            // 공정 제어반에서는 가공 애니메이션과 보관함 저장 로직이 계속 돌아가야 한다.
+            // 납품·요리·API 화면에서만 배경 게임 렌더링을 멈춘다.
+            gameRenderingPaused = (viewName !== 'process');
+            if (!gameRenderingPaused) {
+                lastFrameTime = performance.now();
+            }
+
             setMobileTabActive(viewName);
 
             panel.scrollTop = 0;
@@ -2469,7 +2476,13 @@
         document.addEventListener('visibilitychange', () => {
             if (document.hidden) {
                 gameRenderingPaused = true;
-            } else if (!document.getElementById('rightPanel')?.classList.contains('mobile-panel-open')) {
+                return;
+            }
+
+            const panelOpen = document.getElementById('rightPanel')?.classList.contains('mobile-panel-open');
+            const processActive = document.querySelector('.mobile-tab-btn.active')?.dataset.mobileView === 'process';
+
+            if (!panelOpen || processActive) {
                 gameRenderingPaused = false;
                 lastFrameTime = performance.now();
             }
