@@ -1,0 +1,26 @@
+{
+  "name": "Fisher-Claw AI 스마트 수산 공급사슬 시뮬레이터",
+  "short_name": "Fisher-Claw AI",
+  "description": "포획·가공·보관·납품·요리를 체험하는 AI 수산 공급사슬 시뮬레이터",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#020617",
+  "theme_color": "#041b24",
+  "lang": "ko-KR",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
